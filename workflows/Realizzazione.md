@@ -100,3 +100,5 @@ vedere quelle da convertire in embed ( fatto in maniera asincrona )
 
 Continuare il caricamento dei file e trovare la soluzione migliore per la divisione del contenuto in chunk.
 Quindi trovare uno standard di valutazione ( domandare all'AI).
+
+Ricordati di inserire il campo *topic o argument* relativo ai file, oppure crea una tabella a parte.
