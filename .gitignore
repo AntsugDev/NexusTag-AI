@@ -1,0 +1,11 @@
+.idea
+img
+ai_decision.csv
+**.csv
+**.pkl
+script-ufficiali/Predittivo/__pycache__
+**.pyc
+others
+node_modules
+.vscode
+import-data

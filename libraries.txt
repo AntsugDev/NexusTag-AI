@@ -1,0 +1,32 @@
+# libraries.txt AGGIORNATO
+pandas
+fastapi
+uvicorn
+joblib
+numpy
+scikit-learn
+xgboost
+PyJWT
+uuid
+pydantic
+matplotlib
+seaborn
+lightgbm
+psycopg[binary]
+dotenv
+pytz
+apscheduler
+
+# LANGCHAIN (versione semplificata)
+langchain
+langchain-text-splitters
+langchain-core
+langchain-community
+langchain-ollama
+
+# OLLAMA & EMBEDDING
+ollama
+sentence-transformers
+
+sqlite-vec
+python-multipart

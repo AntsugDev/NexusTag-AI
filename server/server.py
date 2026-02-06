@@ -1,21 +1,29 @@
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from fastapi import FastAPI,HTTPException, Depends, APIRouter, Request
+from fastapi import FastAPI,HTTPException, Depends, APIRouter, Request, File, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 import uvicorn
 from form_request.user_request import UserRequest,PasswordUpdate
+from form_request.upload_file_request import UploadFileRequest
 from database.model.users import User
 from utility.utility import convert_from_pydantic, ExceptionRequest, response
+from server.auth import *
+import dotenv
+import shutil
+
+dotenv.load_dotenv()
 
 app = FastAPI(
-    title="Rag read documentation",
+    title="NexusTag AI documentation",
     version="1.0.0",
-    docs_url="/rag/docs",
-    openapi_url="/rag/openapi.json"
+    description="API documentation for NexusTag AI",
+    root_path=os.getenv('HOST_NAME'),
+    docs_url="/docs",
+    openapi_url="/openapi.json"
 )
 
 # origins = [
@@ -61,6 +69,12 @@ user_router = APIRouter(
     tags=["user"]
 )
 
+auth_router = APIRouter(
+    prefix="/api/auth",
+    tags=["auth"],
+    dependencies=[Depends(verify_token)]  
+)
+
 @user_router.post("/register",tags=["user"],)
 def register(data:UserRequest):
     try:
@@ -79,7 +93,9 @@ def login(data:UserRequest):
         convert = convert_from_pydantic(data)
         user = User()
         result =  user.login(convert.get('username'), convert.get('password'))
-        return response(msg="Login success", data=result)
+        if result is None:
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        return response(msg="Login success", data=create_token(result), status_code=200)
     except (Exception, HTTPException, RequestValidationError) as e:
         raise ExceptionRequest(message=e, status_code=422) 
 
@@ -94,8 +110,39 @@ def login(data:PasswordUpdate, id:int):
         raise ExceptionRequest(message=e, status_code=422) 
 
 
+@auth_router.post('/upload_file',tags=["auth"],)  
+def upload_file(file: UploadFile = File(...), user: dict = Depends(verify_token)):
+    try:
+        from database.model.documents import Documents
+        
+        # Percorso di salvataggio
+        upload_dir = os.path.join(os.getcwd(), 'import-data')
+        if not os.path.exists(upload_dir):
+            os.makedirs(upload_dir)
+            
+        file_path = os.path.join(upload_dir, file.filename)
+        
+        # Salva il file fisicamente
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        documents = Documents()
+        last_id = documents.insert_file({
+            "user_id": user.get("id"),
+            "name_file": file.filename,
+            "status_file": "uploaded",
+            "mime_type": file.content_type,
+            "size": file.size
+        })
+        return response(msg="File uploaded successfully", data={
+            "filename" : file.filename,
+            "last_insert_id" : last_id
+        })
+    except (Exception, HTTPException, RequestValidationError) as e:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        raise ExceptionRequest(message=str(e), status_code=422)   
+
+
 app.include_router(user_router)
-
-uvicorn.run(app, host="0.0.0.0", port=8081, log_level="info")
-
-
+app.include_router(auth_router)
