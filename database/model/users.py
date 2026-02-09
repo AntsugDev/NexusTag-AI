@@ -37,21 +37,24 @@ class User(ModelGeneral):
 
     def login(self, username, password):
         try:    
-            user = self.search({"username": username})
+            results = self.search({"username": username})
            
-            if not user:
+            if not results or len(results) == 0:
                 raise ValueError("User not found")
+            
+            # search now returns a list, take the first element
+            user = results[0]
             convert = dict(user)
             if not self.verify_string(password, convert['password']):
                 raise ValueError("Incorrect password")  
-            return convert;
+            return convert
         except Exception as e:
             raise e
 
     def update_password(self, id, password):
         try:    
-            user = self.search({"id": id})
-            if not user:
+            results = self.search({"id": id})
+            if not results or len(results) == 0:
                 raise ValueError("User not found")
             hashed_password = self.hash_string(password)
             return self.update({"password": hashed_password}, id)          

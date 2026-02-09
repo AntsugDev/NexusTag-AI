@@ -1,14 +1,13 @@
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from fastapi import FastAPI,HTTPException, Depends, APIRouter, Request, File, UploadFile
+from fastapi import FastAPI,HTTPException, Depends, APIRouter, Request, File, Form, UploadFile
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 import uvicorn
 from form_request.user_request import UserRequest,PasswordUpdate
-from form_request.upload_file_request import UploadFileRequest
 from database.model.users import User
 from utility.utility import convert_from_pydantic, ExceptionRequest, response
 from server.auth import *
@@ -111,7 +110,8 @@ def login(data:PasswordUpdate, id:int):
 
 
 @auth_router.post('/upload_file',tags=["auth"],)  
-def upload_file(file: UploadFile = File(...), user: dict = Depends(verify_token)):
+def upload_file(file: UploadFile = File(...), argument: str = Form(...), user: dict = Depends(verify_token)):
+    file_path = None
     try:
         from database.model.documents import Documents
         
@@ -132,14 +132,15 @@ def upload_file(file: UploadFile = File(...), user: dict = Depends(verify_token)
             "name_file": file.filename,
             "status_file": "uploaded",
             "mime_type": file.content_type,
-            "size": file.size
+            "size": file.size,
+            "topic": argument
         })
         return response(msg="File uploaded successfully", data={
             "filename" : file.filename,
             "last_insert_id" : last_id
         })
     except (Exception, HTTPException, RequestValidationError) as e:
-        if os.path.exists(file_path):
+        if file_path and os.path.exists(file_path):
             os.remove(file_path)
         raise ExceptionRequest(message=str(e), status_code=422)   
 

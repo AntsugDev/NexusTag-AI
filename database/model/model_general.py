@@ -46,7 +46,7 @@ class ModelGeneral():
     def search(self, data):
         """Cerca record con criteri specifici"""
         s = f"""SELECT * FROM {self.table} WHERE {' AND '.join([f'{key} = ?' for key in data.keys()])}"""
-        return self.execute(s, tuple(data.values()), one=True)        
+        return self.execute(s, tuple(data.values()), fetch=True)        
     
     def count(self):
         """Conta tutti i record"""

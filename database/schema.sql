@@ -17,8 +17,10 @@ CREATE TABLE documents (
     status_file TEXT NULL,  -- uploaded | processed | error
     mime_type TEXT NULL,
     size INTEGER NULL,
+    topic TEXT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_ready_to_process BOOLEAN DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 

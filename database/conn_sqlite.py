@@ -46,12 +46,15 @@ class ConnectionSqlite:
             else:
                 raise Exception("schema.sql not found") 
         except Exception as e:
-            raise e    
+            raise e  
+
+    def create_base_user(self):
+        try:
+            from database.model.users import User
+            user = User();
+            user.register('admin', 'admin123...')
+        except Exception as e:
+            raise e         
 
     def close(self):
         self.conn.close() 
-
-if __name__ == "__main__":
-    conn = ConnectionSqlite()
-    conn.migration(is_force=1)
-    conn.close()

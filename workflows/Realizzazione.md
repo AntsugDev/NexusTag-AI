@@ -102,3 +102,15 @@ Continuare il caricamento dei file e trovare la soluzione migliore per la divisi
 Quindi trovare uno standard di valutazione ( domandare all'AI).
 
 Ricordati di inserire il campo *topic o argument* relativo ai file, oppure crea una tabella a parte.
+
+---
+
+# 09-02-2026
+
+Ho sistemato l'api per caricamento file aggiungendo il campo *topic*.
+
+Ho creato lo scheduler per la gestione dei file da processare.
+
+Ho createo lo scheduler generale e il file per la registrazione degli scheduler; questa è presente nel file **main.py**.
+
+Devo testare se lo scheduler parte e se la gestione dei file da processare funziona e come crea i *chunk*.
