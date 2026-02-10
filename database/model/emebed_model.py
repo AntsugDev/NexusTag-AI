@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from .model_general import ModelGeneral
 class EmbedModel(ModelGeneral):
     def __init__(self):
         self.table = "embeddings"

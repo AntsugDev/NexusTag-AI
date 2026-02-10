@@ -1,7 +1,10 @@
-import pandas as pd
 import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from file.general_chunck import GeneralChunck
+import pandas as pd
 import json
-from general_chunck import GeneralChunck
+
 
 class CsvChunk(GeneralChunck):
     def __init__(self, file, type_file, document_id):

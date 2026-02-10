@@ -1,5 +1,11 @@
-from general_chunck import GeneralChunck
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from file.general_chunck import GeneralChunck
 from langchain_text_splitters import  RecursiveCharacterTextSplitter
+from database.model.chunks_table import ChunkTable
+import json
+
 # file log, txt, markdown e sql
 class SimpleChunk(GeneralChunck):
     def __init__ (self, file, type_file, document_id):
@@ -9,6 +15,7 @@ class SimpleChunk(GeneralChunck):
             self.get_content = f.read()
         
         self.separator_standard = ["\n", "\r\n"]
+        self.chunks = ChunkTable()
 
         if self.type_file == 'md':
             self.separator_standard = ["#", "##", "###", "\n\n", "\n", " "]
@@ -26,19 +33,28 @@ class SimpleChunk(GeneralChunck):
                 separators=self.separator_standard,
                 is_separator_regex=False
             )
-            splits = splitter.split_text(self.get_content)
-            
-            # Trasformiamo in lista di dict con metadati
             result = []
-            for i, text in enumerate(splits):
-                result.append({
-                    "content": text,
-                    "metadata": {
-                        "chunk_order": i,
-                        "type": self.type_file,
-                        "char_count": len(text)
-                    }
-                })
+            if self.get_content:
+                splits = splitter.split_text(self.get_content)
+                for i, text in enumerate(splits):
+                   
+                    chunk = self.chunks.insert_chunk({
+                        "id": self.document_id,
+                        "content": text,
+                        "order_chunk": i,
+                        "strategy_chunk": self.strategy_chunk(),
+                        "token_count": self.standard_token,
+                        "overlap_token": self.standard_overlap,
+                        "metadata": json.dumps({
+                            "chunk_order": i,
+                            "type": self.type_file,
+                            "char_count": len(text)
+                        })
+                    })
+                    if chunk:
+                        result.append(chunk)
+            else:
+                raise Exception("Errore durante la lettura del file")
             return result
         except Exception as e:
             raise e

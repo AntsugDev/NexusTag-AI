@@ -25,13 +25,13 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
-# origins = [
-#     "http://localhost:5173", 
-# ]
+origins = [
+    "http://localhost:5173", 
+]
 
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=origins,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=[
@@ -94,7 +94,12 @@ def login(data:UserRequest):
         result =  user.login(convert.get('username'), convert.get('password'))
         if result is None:
             raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-        return response(msg="Login success", data=create_token(result), status_code=200)
+        
+        token = create_token(result)
+        return response(msg="Login success", data={
+            "access_token": token,
+            "username": convert.get('username')
+        }, status_code=200)
     except (Exception, HTTPException, RequestValidationError) as e:
         raise ExceptionRequest(message=e, status_code=422) 
 
@@ -135,7 +140,7 @@ def upload_file(file: UploadFile = File(...), argument: str = Form(...), user: d
             "size": file.size,
             "topic": argument
         })
-        return response(msg="File uploaded successfully", data={
+        return response(msg="File uploaded successfully, wait for processing", data={
             "filename" : file.filename,
             "last_insert_id" : last_id
         })
@@ -145,5 +150,57 @@ def upload_file(file: UploadFile = File(...), argument: str = Form(...), user: d
         raise ExceptionRequest(message=str(e), status_code=422)   
 
 
+admin_router = APIRouter(
+    prefix="/api/admin",
+    tags=["admin"],
+    dependencies=[Depends(verify_token)]
+)
+
+@admin_router.get("/documents", tags=["admin"])
+def get_documents(page: int = 1, limit: int = 10, user: dict = Depends(verify_token)):
+    if user.get("username") != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden: Admin only")
+    try:
+        from database.model.documents import Documents
+        doc_model = Documents()
+        items = doc_model.paginate(page=page, limit=limit)
+        total = doc_model.count()
+        return response(msg="Documents retrieved", data={
+            "items": [dict(item) for item in items],
+            "total": total,
+            "page": page,
+            "limit": limit
+        })
+    except Exception as e:
+        raise ExceptionRequest(message=str(e), status_code=422)
+
+@admin_router.get("/documents/{id}/chunks", tags=["admin"])
+def get_chunks(id: int, page: int = 1, limit: int = 10, user: dict = Depends(verify_token)):
+    if user.get("username") != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden: Admin only")
+    try:
+        from database.model.chunks_table import ChunkTable
+        chunk_model = ChunkTable()
+        items = chunk_model.paginate(page=page, limit=limit, data={"document_id": id})
+        total = chunk_model.count_search(data={"document_id": id})
+        return response(msg="Chunks retrieved", data={
+            "items": [dict(item) for item in items],
+            "total": total,
+            "page": page,
+            "limit": limit
+        })
+    except Exception as e:
+        raise ExceptionRequest(message=str(e), status_code=422)
+
 app.include_router(user_router)
 app.include_router(auth_router)
+app.include_router(admin_router)
+
+# Serve Frontend
+frontend_path = os.path.join(os.getcwd(), "static")
+if os.path.exists(frontend_path):
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="static")
+else:
+    @app.get("/")
+    def read_root():
+        return {"message": "Frontend not built yet. Run 'npm run build' in the frontend folder."}

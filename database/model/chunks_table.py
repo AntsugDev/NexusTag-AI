@@ -1,11 +1,15 @@
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from .model_general import ModelGeneral
 class ChunkTable(ModelGeneral):
     def __init__(self):
           self.table = "chunks"
 
     def insert_chunk(self, data):
+        print("'Insert chunck' \n .... \n")
         return self.insert({
-            "document_id": data.get("document_id"),
+            "document_id": data.get("id"),
             "content": data.get("content"),
             "order_chunk": data.get("order_chunk"),
             "strategy_chunk": data.get("strategy_chunk"),

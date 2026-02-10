@@ -26,3 +26,11 @@ class Scheduler(ABC):
             print(f"Job registered: {self.tag} with trigger {self.trigger} ({self.kwargs})")
         except Exception as e:
             raise e
+
+    def failed(self, data):
+        try:
+            from database.model.jobs_failed import JobsFailed
+            failed = JobsFailed()
+            failed.insert(data)
+        except Exception as e:
+            raise e    

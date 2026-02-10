@@ -1,3 +1,6 @@
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from .model_general import ModelGeneral 
 class Documents(ModelGeneral):
     def __init__(self):
@@ -14,7 +17,17 @@ class Documents(ModelGeneral):
         })
 
     def get_documents_ready_to_process(self):
-        return self.search({"is_ready_to_process": 0})  
+        return self.search({"status_file": "uploaded"})  
 
-    def update_read(self, id):
-        return self.update({"is_ready_to_process": 1}, id)      
+    def update_processed(self, id):
+        return self.update({"status_file": "processed"}, id) 
+
+    def update_error(self, id):
+        return self.update({"status_file": "error"}, id)       
+
+    def select_document(self, id):
+        show = self.show(id)
+        if show:
+            return dict(show)
+        else:
+            raise Exception("Document not found")

@@ -33,20 +33,33 @@ class ModelGeneral():
         self.execute(s, (id,))
         return True
 
-    def show(self, id, columns:[]= None):
+    def show(self, id, columns=None):
         """Mostra un singolo record"""
-        s = f"""SELECT {','.join(columns) if not None else '*'} FROM {self.table} WHERE id = ?"""
+        s = f"""SELECT {','.join(columns) if columns is not None else '*'} FROM {self.table} WHERE id = ?"""
         return self.execute(s, (id,), one=True)
 
-    def global_search(self, columns:[]= None):
+    def global_search(self, columns=None):
         """Restituisce tutti i record"""
-        s = f"""SELECT {','.join(columns) if not None else '*'} FROM {self.table}"""
+        s = f"""SELECT {','.join(columns) if columns is not None else '*'} FROM {self.table}"""
         return self.execute(s, fetch=True)
 
     def search(self, data):
         """Cerca record con criteri specifici"""
         s = f"""SELECT * FROM {self.table} WHERE {' AND '.join([f'{key} = ?' for key in data.keys()])}"""
         return self.execute(s, tuple(data.values()), fetch=True)        
+    
+    def paginate(self, page=1, limit=10, data=None):
+        """Restituisce record paginati"""
+        offset = (page - 1) * limit
+        where_clause = ""
+        values = []
+        if data:
+            where_clause = f" WHERE {' AND '.join([f'{key} = ?' for key in data.keys()])}"
+            values = list(data.values())
+        
+        s = f"SELECT * FROM {self.table}{where_clause} LIMIT ? OFFSET ?"
+        values.extend([limit, offset])
+        return self.execute(s, tuple(values), fetch=True)
     
     def count(self):
         """Conta tutti i record"""

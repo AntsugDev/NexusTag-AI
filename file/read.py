@@ -1,8 +1,10 @@
 import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import pandas as pd
-from simple_chunk import SimpleChunk
-from csv_chunck import CsvChunk
-from xls_chunck import XlsChunk
+from .simple_chunk import SimpleChunk
+from .csv_chunck import CsvChunk
+from .xls_chunck import XlsChunk
 import mimetypes
 from database.model.documents import Documents
 
@@ -11,29 +13,25 @@ TYPE_FILE = ['txt','log','sql','csv', 'md','pdf', 'doc', 'docs', 'xls', 'xlsx']
 
 class ReadFileCustom:
     @staticmethod
-    def get_instance(file_path, user_id): # Metodo statico per "creare" l'oggetto giusto
-        # 1. Verifica estensione
+    def get_instance(file_path, doc_id): 
+        
         ext = file_path.split('.')[-1].lower()
         if ext not in TYPE_FILE:
             raise Exception("Tipo file non supportato")
-        # 2. Registrazione Documento nel DB (Logica che avevi già iniziato)
-        doc_model = Documents()
-        doc_id = doc_model.insert_file({
-            "user_id": user_id,
-            "name_file": os.path.basename(file_path),
-            "size": os.path.getsize(file_path),
-            "status_file": "uploaded"
-        })
-        # 3. Restituisce la classe specializzata passandogli il doc_id
+        print(f"Read file {file_path} and is type: {ext}\n")
         match ext:
             case 'txt' | 'log' | 'md':
-                return SimpleChunk(file_path, ext, doc_id)
+                c = SimpleChunk(file_path, ext, doc_id)
+                return c.chunck()
             case 'csv':
-                return CsvChunk(file_path, ext, doc_id)
+                c = CsvChunk(file_path, ext, doc_id)
+                return c.chunck()
             case 'xls' | 'xlsx':
-                return XlsChunk(file_path, ext, doc_id)
+                c = XlsChunk(file_path, ext, doc_id)
+                return c.chunck()
             case 'pdf':
-                return PdfChunk(file_path, ext, doc_id)
+                c = PdfChunk(file_path, ext, doc_id)
+                return c.chunck()
 
         
     def __verify(self, type):   

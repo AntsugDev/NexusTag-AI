@@ -1,4 +1,7 @@
-from langchain_ollama  import OllamaEmbeddings
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from langchain_ollama import OllamaEmbeddings
 import asyncio 
 from database.model.jobs_failed import JobsFailed
 class Embed:
