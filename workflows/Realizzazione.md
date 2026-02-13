@@ -116,3 +116,21 @@ Ho createo lo scheduler generale e il file per la registrazione degli scheduler;
 Devo testare se lo scheduler parte e se la gestione dei file da processare funziona e come crea i *chunk*.
 
 **Importante:**  ricorda che l' excel non hai considerato gli sheet
+
+
+# 13-02-2026
+
+Ho sistemato l'api per caricamento file aggiungendo il campo *topic*.
+Ho creato la parte FE per caricare i file
+Ho creato anche il pulsante per avviare il processo di elaborazione del file, ma logicamente, resta sempre la migliore soluzione lo scheduler( **Che deve essere risistemato**)
+
+
+**Importante:**  ricorda che l' excel non hai considerato gli sheet
+
+## Come proseguire
+
+- rivedere il tutto solo lato AI
+- risistemare lo scheduler
+- creare una tabella che segni che il file è stato preso in carico dallo scheduler
+- sistemare il chunk per il file excel
+- creare le valutazione (secondo quale logica ...)
