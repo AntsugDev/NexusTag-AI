@@ -8,12 +8,12 @@ class JobsFailed(ModelGeneral):
     def __init__(self):
         self.table = "jobs_failed"
 
-    def insert_job_failed(self, data):
+    def insert(self, data):
         meta_data = data.get("meta_data")
         if isinstance(meta_data, dict):
             meta_data = json.dumps(meta_data)
             
-        return self.insert({
+        return super().insert({
             "document_id": data.get("document_id"),
             "row_id": data.get("row_id"),
             "meta_data": meta_data,

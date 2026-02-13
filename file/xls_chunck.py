@@ -34,12 +34,3 @@ class XlsChunk(GeneralChunck):
             return result
         except Exception as e:
             raise e 
-
-if __name__ == "__main__":
-    files = os.path.join(__file__.replace('file\\csv_chunck.py',''),'fed-prov-competence.csv')
-    if os.path.exists(files):
-        c = CsvChunk(files)
-        r = c.chunk()
-        print(r);                   
-    else :
-        print("File not found !")
