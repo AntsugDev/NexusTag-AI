@@ -23,6 +23,9 @@ class Documents(ModelGeneral):
     def update_processed(self, id):
         return self.update({"status_file": "processed"}, id) 
 
+    def update_pending(self, id):
+        return self.update({"status_file": "pending"}, id) 
+
     def update_error(self, id):
         return self.update({"status_file": "error"}, id)       
 

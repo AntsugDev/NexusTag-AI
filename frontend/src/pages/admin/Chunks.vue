@@ -33,7 +33,7 @@ const loadLazyData = async (event) => {
     const limit = event ? event.rows : rows.value
 
     try {
-        const result = await api.get(`/api/admin/documents/${documentId}/chunks`, {
+        const result = await api.get(`/api/documents/documents/${documentId}/chunks`, {
             params: {
                 page: page,
                 limit: limit

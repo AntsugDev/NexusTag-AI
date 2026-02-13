@@ -13,9 +13,9 @@ if __name__ == "__main__":
     # c.create_base_user()
 
     # Avvio dello scheduler in background
-    # scheduler = BackgroundScheduler()
-    # register_all_jobs(scheduler)
-    # scheduler.start()
+    scheduler = BackgroundScheduler()
+    register_all_jobs(scheduler)
+    scheduler.start()
 
     if ENV == "development":   
         uvicorn.run(app, host="0.0.0.0", port=8081, log_level="info")

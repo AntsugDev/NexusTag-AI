@@ -1,17 +1,25 @@
 from scheduler.scheduler import Scheduler
+import datetime
 class DocumentsJobs(Scheduler):
     def __init__(self):
-        super().__init__("documents_jobs", trigger="cron", hour=3, minute=0)
+        super().__init__("documents_jobs", trigger="interval", minutes=5)
 
     def handle(self):
         
             from database.model.documents import Documents
             documents = Documents()
             documents_ready = documents.get_documents_ready_to_process()
+            if documents_ready:
+                print(f"[{datetime.datetime.now()}] Scheduler: Found {len(documents_ready)} documents to process.")
+                
             for index, document in enumerate(documents_ready):
+                print(f"[{datetime.datetime.now()}] Processing document: {document['name_file']} (ID: {document['id']})")
                 try:
+                    documents.update_pending(document["id"])
                     from file.read import ReadFileCustom
-                    worked = ReadFileCustom.get_instance(document["name_file"], document["user_id"])
+                    import os
+                    file_path = os.path.join(os.getcwd(), 'import-data', document["name_file"])
+                    worked = ReadFileCustom.get_instance(file_path, document["id"])
                     if worked:
                         documents.update_processed(document["id"])
                     else:

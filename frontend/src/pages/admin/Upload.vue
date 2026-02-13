@@ -35,7 +35,7 @@ const fetchSuggestions = async (val) => {
     }
 
     try {
-        const result = await api.get('/api/admin/suggest_topic', {
+        const result = await api.get('/api/documents/suggest_topic', {
             params: { q: val }
         })
         suggestions.value = result.data.result
@@ -68,7 +68,7 @@ const handleUpload = async (event) => {
     formData.append('argument', topic.value)
 
     try {
-        await api.post('/api/auth/upload_file', formData, {
+        await api.post('/api/documents/upload_file', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }

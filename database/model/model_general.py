@@ -69,8 +69,14 @@ class ModelGeneral():
 
     def count_search(self, data):
         """Conta record con criteri specifici"""
-        s = f"""SELECT COUNT(*) as total FROM {self.table} WHERE {' AND '.join([f'{key} = ?' for key in data.keys()])}"""
-        result = self.execute(s, tuple(data.values()), one=True)
+        where_clause = ""
+        values = []
+        if data:
+            where_clause = f" WHERE {' AND '.join([f'{key} = ?' for key in data.keys()])}"
+            values = tuple(data.values())
+        
+        s = f"SELECT COUNT(*) as total FROM {self.table}{where_clause}"
+        result = self.execute(s, values if values else None, one=True)
         return result[0] if result else 0
 
     def statment(self, query,data=None, fetch:bool=False, one:bool=False):

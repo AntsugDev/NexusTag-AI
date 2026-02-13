@@ -42,7 +42,7 @@ const loadLazyData = async (event) => {
     const limit = event ? event.rows : rows.value
 
     try {
-        const result = await api.get('/api/admin/documents', {
+        const result = await api.get('/api/documents/documents', {
             params: {
                 page: page,
                 limit: limit
@@ -77,7 +77,7 @@ const viewChunks = (data) => {
 
 const viewError = async (id) => {
     try {
-        const result = await api.get(`/api/admin/documents/${id}/error`)
+        const result = await api.get(`/api/jobs/job_failed/${id}/error`)
         errorMessage.value = result.data.result.error
         showErrorDialog.value = true
     } catch (e) {
@@ -93,7 +93,7 @@ const viewError = async (id) => {
 
 const pollStatus = async (id) => {
     try {
-        const result = await api.get(`/api/admin/documents/${id}/status`)
+        const result = await api.get(`/api/documents/documents/${id}/status`)
         const status = result.data.result.status_file
 
         if (status === 'processed') {
@@ -124,31 +124,13 @@ const pollStatus = async (id) => {
     }
 }
 
-const processDocument = async (id) => {
-    isProcessing.value = true
-    try {
-        await api.post(`/api/admin/documents/${id}/process`)
-        // Iniziamo il polling
-        pollStatus(id)
-    } catch (e) {
-        console.error('Error starting process:', e)
-        isProcessing.value = false
+// La funzione processDocument è stata rimossa perché l'elaborazione è ora gestita esclusivamente via scheduler
 
-        // Estrai il messaggio di errore dall'API se presente
-        const errorMsg = e.response?.data?.message || 'Errore durante l\'avvio dell\'elaborazione'
-
-        toast.add({
-            severity: 'error',
-            summary: t('common.error'),
-            detail: errorMsg,
-            life: 5000
-        })
-    }
-}
 
 const getStatusSeverity = (status) => {
     switch (status) {
         case 'processed': return 'success'
+        case 'pending': return 'warning'
         case 'uploaded': return 'info'
         case 'error': return 'danger'
         default: return 'secondary'
@@ -225,10 +207,8 @@ const formatSize = (bytes) => {
                         <Button v-if="data.status_file === 'processed'" icon="pi pi-list" severity="info" text raised
                             rounded @click="viewChunks(data)" v-tooltip.top="t('common.viewChunks')" />
 
-                        <Button v-else-if="data.status_file === 'uploaded' || data.status_file === 'error'"
-                            :icon="data.status_file === 'error' ? 'pi pi-refresh' : 'pi pi-play'"
-                            :severity="data.status_file === 'error' ? 'danger' : 'warn'" text raised rounded
-                            @click="processDocument(data.id)" v-tooltip.top="t('common.process')" :loading="loading" />
+                        <Button v-if="data.status_file === 'pending'" icon="pi pi-spin pi-spinner" severity="warning"
+                            text raised rounded disabled v-tooltip.top="t('documents.status_pending')" />
 
                         <Button v-if="data.status_file === 'error'" icon="pi pi-exclamation-triangle" severity="warning"
                             text raised rounded @click="viewError(data.id)" v-tooltip.top="t('common.viewError')" />
