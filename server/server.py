@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from fastapi import FastAPI,HTTPException, Depends, APIRouter, Request, File, Form, UploadFile
+from fastapi import FastAPI,HTTPException, Depends, APIRouter, Request, File, Form, UploadFile, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -67,6 +67,23 @@ user_router = APIRouter(
     prefix="/api/user",
     tags=["user"]
 )
+
+@user_router.get("/documents", tags=["user"])
+def get_user_documents(page: int = 1, limit: int = 10, user: dict = Depends(verify_token)):
+    try:
+        from database.model.documents import Documents
+        doc_model = Documents()
+        # We need a way to filter by user_id in paginate
+        items = doc_model.paginate(page=page, limit=limit, data={"user_id": user.get("id")})
+        total = doc_model.count_search(data={"user_id": user.get("id")})
+        return response(msg="User documents retrieved", data={
+            "items": [dict(item) for item in items],
+            "total": total,
+            "page": page,
+            "limit": limit
+        })
+    except Exception as e:
+        raise ExceptionRequest(message=str(e), status_code=422)
 
 auth_router = APIRouter(
     prefix="/api/auth",
@@ -149,12 +166,28 @@ def upload_file(file: UploadFile = File(...), argument: str = Form(...), user: d
             os.remove(file_path)
         raise ExceptionRequest(message=str(e), status_code=422)   
 
-
 admin_router = APIRouter(
     prefix="/api/admin",
     tags=["admin"],
     dependencies=[Depends(verify_token)]
 )
+
+@admin_router.get("/suggest_topic", tags=["admin"])
+def suggest_topic(q: str = "", user: dict = Depends(verify_token)):
+    if user.get("username") != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden: Admin only")
+    try:
+        from database.model.documents import Documents
+        doc_model = Documents()
+        suggestions = []
+        if q and len(q.strip()) >= 2:
+            items = doc_model.suggest_topics(q.strip())
+            suggestions = [item[0] for item in items if item and item[0]]
+        return response(msg="Suggestions retrieved", data=suggestions)
+    except Exception as e:
+        return response(msg="No suggestions", data=[])
+
+
 
 @admin_router.get("/documents", tags=["admin"])
 def get_documents(page: int = 1, limit: int = 10, user: dict = Depends(verify_token)):
@@ -189,6 +222,96 @@ def get_chunks(id: int, page: int = 1, limit: int = 10, user: dict = Depends(ver
             "page": page,
             "limit": limit
         })
+    except Exception as e:
+        raise ExceptionRequest(message=str(e), status_code=422)
+
+@admin_router.get("/documents/{id}/status", tags=["admin"])
+def get_document_status(id: int, user: dict = Depends(verify_token)):
+    if user.get("username") != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden: Admin only")
+    try:
+        from database.model.documents import Documents
+        doc_model = Documents()
+        document = doc_model.select_document(id)
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+        return response(msg="Document status retrieved", data={"status_file": document["status_file"]})
+    except Exception as e:
+        raise ExceptionRequest(message=str(e), status_code=422)
+
+@admin_router.get("/documents/{id}/error", tags=["admin"])
+def get_document_error(id: int, user: dict = Depends(verify_token)):
+    if user.get("username") != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden: Admin only")
+    try:
+        from database.model.jobs_failed import JobsFailed
+        job_failed = JobsFailed()
+        error_msg = job_failed.get_last_error(id)
+        return response(msg="Error details retrieved", data={"error": error_msg})
+    except Exception as e:
+        raise ExceptionRequest(message=str(e), status_code=422)
+
+def run_document_processing(id: int, document: dict):
+    try:
+        from database.model.documents import Documents
+        from database.model.chunks_table import ChunkTable
+        from file.read import ReadFileCustom
+        
+        doc_model = Documents()
+        chunk_model = ChunkTable()
+        
+        # 1. Cleanup before starting (Rollback Strategy)
+        chunk_model.delete_by_document(id)
+        
+        # 2. Trigger processing
+        worked = ReadFileCustom.get_instance(document["name_file"], document["user_id"])
+        
+        if worked:
+            doc_model.update_processed(id)
+        else:
+            doc_model.update_error(id)
+            from database.model.jobs_failed import JobsFailed
+            job_failed = JobsFailed()
+            job_failed.insert_job_failed({
+                "document_id": id,
+                "row_id": 0,
+                "meta_data": document,
+                "exception": "Processing failed without specific error"
+            })
+    except Exception as e:
+        from database.model.documents import Documents
+        Documents().update_error(id)
+        try:
+            from database.model.jobs_failed import JobsFailed
+            JobsFailed().insert_job_failed({
+                "document_id": id,
+                "row_id": 0,
+                "meta_data": document,
+                "exception": str(e)
+            })
+        except:
+            pass
+
+@admin_router.post("/documents/{id}/process", tags=["admin"])
+def process_document(id: int, background_tasks: BackgroundTasks, user: dict = Depends(verify_token)):
+    if user.get("username") != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden: Admin only")
+    try:
+        from database.model.documents import Documents
+        doc_model = Documents()
+        document = doc_model.select_document(id)
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+            
+        # Imposta lo stato a 'processing' (opzionale, se vuoi un nuovo stato)
+        # doc_model.update({"status_file": "processing"}, id)
+        
+        # Avvia in background
+        background_tasks.add_task(run_document_processing, id, document)
+        
+        return response(msg="Processing started in background")
+            
     except Exception as e:
         raise ExceptionRequest(message=str(e), status_code=422)
 

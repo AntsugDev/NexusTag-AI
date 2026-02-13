@@ -1,7 +1,9 @@
 <script setup>
 import { useAuthStore } from '../store/auth'
+import { useI18n } from 'vue-i18n'
 import Card from 'primevue/card'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 </script>
 
@@ -12,16 +14,16 @@ const auth = useAuthStore()
                 <div class="welcome-content">
                     <i class="pi pi-sparkles welcome-icon"></i>
                     <h2>
-                        Benvenuto in NexusTag-AI -
+                        {{ t('common.welcome') }} -
                         <span :class="auth.isAdmin ? 'role-admin' : 'role-user'">
-                            {{ auth.isAdmin ? 'AMMINISTRATORE' : 'UTENTE' }}
+                            {{ auth.isAdmin ? t('common.admin').toUpperCase() : t('common.user').toUpperCase() }}
                         </span>
                     </h2>
                     <p v-if="auth.isAdmin">
-                        Hai accesso completo alla gestione dei documenti e dei chunk.
+                        {{ t('home.admin_msg') }}
                     </p>
                     <p v-else>
-                        Hai accesso alle funzionalità di consultazione e ricerca.
+                        {{ t('home.user_msg') }}
                     </p>
                 </div>
             </template>

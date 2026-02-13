@@ -24,6 +24,11 @@ const routes = [
         meta: { role: "admin" },
       },
       {
+        path: "admin/documents/upload",
+        name: "Upload",
+        component: () => import("../pages/admin/Upload.vue"),
+      },
+      {
         path: "admin/documents/:id/chunks",
         name: "Chunks",
         component: () => import("../pages/admin/Chunks.vue"),
@@ -47,15 +52,31 @@ router.beforeEach((to, from, next) => {
   const auth = useAuthStore();
   const isAuthenticated = auth.isAuthenticated;
 
-  if (!to.meta.public && !isAuthenticated) {
-    next({ name: "Login" });
-  } else if (to.name === "Login" && isAuthenticated) {
-    next({ name: "Home" });
-  } else if (to.meta.role === "admin" && auth.user?.username !== "admin") {
-    next({ name: "Home" });
-  } else {
-    next();
+  // 1. If the route is public, let them pass
+  if (to.meta.public) {
+    // If already logged in and trying to access login, send to home
+    if (to.name === "Login" && isAuthenticated) {
+      next({ name: "Home" });
+    } else {
+      next();
+    }
+    return;
   }
+
+  // 2. If not authenticated and not public, force login
+  if (!isAuthenticated) {
+    next({ name: "Login" });
+    return;
+  }
+
+  // 3. Admin specific protection
+  if (to.meta.role === "admin" && !auth.isAdmin) {
+    next({ name: "Home" });
+    return;
+  }
+
+  // 4. Default: authenticate allowed
+  next();
 });
 
 export default router;

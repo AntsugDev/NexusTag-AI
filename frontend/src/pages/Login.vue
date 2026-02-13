@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
+import { useI18n } from 'vue-i18n'
 import Card from 'primevue/card'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
@@ -10,6 +11,7 @@ import Message from 'primevue/message'
 
 import api from '../api/axios'
 
+const { t, locale } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
 
@@ -18,9 +20,13 @@ const password = ref('')
 const loading = ref(false)
 const error = ref('')
 
+const toggleLanguage = () => {
+    locale.value = locale.value === 'it' ? 'en' : 'it'
+}
+
 const handleLogin = async () => {
     if (!username.value || !password.value) {
-        error.value = 'Username e password sono obbligatori'
+        error.value = t('login.required')
         return
     }
 
@@ -33,14 +39,11 @@ const handleLogin = async () => {
             password: password.value
         })
 
-        // result.data contains the response from server (which has message, time, result)
         const data = result.data.result
         auth.setAuth(data.access_token, { username: username.value })
         router.push({ name: 'Home' })
     } catch (e) {
-        // Errors are already handled by interceptor (showing toast)
-        // but we might want to show local feedback too
-        error.value = 'Credenziali non valide o errore di connessione'
+        error.value = t('login.invalid')
     } finally {
         loading.value = false
     }
@@ -49,23 +52,27 @@ const handleLogin = async () => {
 
 <template>
     <div class="login-page">
+        <div class="lang-switcher-login">
+            <Button :label="locale.toUpperCase()" icon="pi pi-globe" text @click="toggleLanguage"
+                severity="secondary" />
+        </div>
         <div class="background-decor"></div>
         <Card class="login-card glass-panel">
             <template #header>
                 <div class="login-header">
                     <h1>NexusTag <span class="primary">AI</span></h1>
-                    <p>Inserisci le tue credenziali per accedere</p>
+                    <p>{{ t('login.subtitle') }}</p>
                 </div>
             </template>
             <template #content>
                 <form @submit.prevent="handleLogin" class="login-form">
                     <div class="field">
-                        <label for="username">Username</label>
+                        <label for="username">{{ t('login.username') }}</label>
                         <InputText id="username" v-model="username" class="w-full"
                             :class="{ 'p-invalid': error && !username }" placeholder="admin" />
                     </div>
                     <div class="field">
-                        <label for="password">Password</label>
+                        <label for="password">{{ t('login.password') }}</label>
                         <Password id="password" v-model="password" class="w-full" :toggleMask="true" :feedback="false"
                             :class="{ 'p-invalid': error && !password }" placeholder="••••••••" />
                     </div>
@@ -74,7 +81,8 @@ const handleLogin = async () => {
                         <Message v-if="error" severity="error" class="mb-3">{{ error }}</Message>
                     </transition>
 
-                    <Button type="submit" label="Login" icon="pi pi-sign-in" :loading="loading" class="w-full mt-2" />
+                    <Button type="submit" :label="t('login.submit')" icon="pi pi-sign-in" :loading="loading"
+                        class="w-full mt-2" />
                 </form>
             </template>
         </Card>
@@ -82,15 +90,37 @@ const handleLogin = async () => {
 </template>
 
 <style scoped>
+.lang-switcher-login {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+}
+
 .login-page {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: var(--light-color);
     position: relative;
     padding: 1.5rem;
     overflow-y: auto;
+}
+
+.login-page::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--primary-color) 0%, transparent 100%);
+    opacity: 0.1;
+    z-index: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+    .login-page::before {
+        opacity: 0.2;
+    }
 }
 
 .background-decor {
@@ -100,7 +130,7 @@ const handleLogin = async () => {
     width: 150%;
     height: 150%;
     background: radial-gradient(circle at center, var(--primary-color) 0%, transparent 70%);
-    opacity: 0.08;
+    opacity: 0.12;
     z-index: 0;
     animation: rotate 30s linear infinite;
     pointer-events: none;
@@ -120,8 +150,7 @@ const handleLogin = async () => {
     width: 100%;
     max-width: 420px;
     z-index: 1;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    border-radius: 16px;
+    border-radius: 20px;
     border: none;
 }
 
@@ -135,6 +164,7 @@ const handleLogin = async () => {
     font-size: 2.25rem;
     font-weight: 900;
     letter-spacing: -1px;
+    color: var(--text-primary);
 }
 
 .login-header .primary {
@@ -142,7 +172,7 @@ const handleLogin = async () => {
 }
 
 .login-header p {
-    color: var(--secondary-color);
+    color: var(--text-secondary);
     margin-top: 0.75rem;
     font-size: 1rem;
 }
@@ -160,7 +190,7 @@ const handleLogin = async () => {
 
 .field label {
     font-weight: 700;
-    color: var(--dark-color);
+    color: var(--text-primary);
     font-size: 0.9rem;
 }
 

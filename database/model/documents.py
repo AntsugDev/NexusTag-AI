@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from .model_general import ModelGeneral 
+
 class Documents(ModelGeneral):
     def __init__(self):
          self.table = "documents"
@@ -31,3 +32,7 @@ class Documents(ModelGeneral):
             return dict(show)
         else:
             raise Exception("Document not found")
+
+    def suggest_topics(self, q):
+        query = f"SELECT DISTINCT topic FROM {self.table} WHERE topic LIKE ? LIMIT 5"
+        return self.statment(query, (f"%{q}%",), fetch=True)

@@ -1,17 +1,19 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../store/auth'
 import Menubar from 'primevue/menubar'
 import Button from 'primevue/button'
 
+const { t, locale } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 
 const items = computed(() => {
     const baseItems = [
         {
-            label: 'Home',
+            label: t('menu.home'),
             icon: 'pi pi-home',
             command: () => router.push({ name: 'Home' })
         }
@@ -19,20 +21,34 @@ const items = computed(() => {
 
     if (auth.isAdmin) {
         baseItems.push({
-            label: 'Amministratore',
-            icon: 'pi pi-shield',
+            label: t('menu.upload'),
+            icon: 'pi pi-upload',
+            command: () => router.push({ name: 'Upload' })
+        })
+        baseItems.push({
+            label: t('menu.list'),
+            icon: 'pi pi-list',
             command: () => router.push({ name: 'Admin' })
         })
     } else {
         baseItems.push({
-            label: 'Utente',
-            icon: 'pi pi-user',
+            label: t('menu.upload'),
+            icon: 'pi pi-upload',
+            command: () => router.push({ name: 'Upload' })
+        })
+        baseItems.push({
+            label: t('menu.list'),
+            icon: 'pi pi-list',
             command: () => router.push({ name: 'User' })
         })
     }
 
     return baseItems
 })
+
+const toggleLanguage = () => {
+    locale.value = locale.value === 'it' ? 'en' : 'it'
+}
 
 const handleLogout = () => {
     auth.logout()
@@ -50,8 +66,11 @@ const handleLogout = () => {
             </template>
             <template #end>
                 <div class="user-actions">
+                    <Button :label="locale.toUpperCase()" icon="pi pi-globe" text @click="toggleLanguage"
+                        class="lang-btn" />
                     <span v-if="auth.user" class="username">{{ auth.user.username }}</span>
-                    <Button label="Logout" icon="pi pi-sign-out" severity="danger" text @click="handleLogout" />
+                    <Button :label="t('common.logout')" icon="pi pi-sign-out" severity="danger" text
+                        @click="handleLogout" />
                 </div>
             </template>
         </Menubar>
@@ -69,7 +88,7 @@ const handleLogout = () => {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background-color: #f4f7f9;
+    background-color: var(--light-color);
 }
 
 .layout-menubar {
@@ -88,7 +107,7 @@ const handleLogout = () => {
 .logo-text {
     font-size: 1.25rem;
     font-weight: 800;
-    color: var(--dark-color);
+    color: var(--text-primary);
     letter-spacing: -0.5px;
     white-space: nowrap;
 }
@@ -105,7 +124,7 @@ const handleLogout = () => {
 
 .username {
     font-weight: 600;
-    color: var(--secondary-color);
+    color: var(--text-secondary);
     font-size: 0.9rem;
     max-width: 100px;
     overflow: hidden;

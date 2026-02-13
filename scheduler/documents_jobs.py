@@ -1,14 +1,14 @@
 from scheduler.scheduler import Scheduler
 class DocumentsJobs(Scheduler):
     def __init__(self):
-        super().__init__("documents_jobs", trigger="interval", minutes=30)
+        super().__init__("documents_jobs", trigger="cron", hour=3, minute=0)
 
     def handle(self):
         
             from database.model.documents import Documents
             documents = Documents()
             documents_ready = documents.get_documents_ready_to_process()
-            for document,index in enumerate(documents_ready):
+            for index, document in enumerate(documents_ready):
                 try:
                     from file.read import ReadFileCustom
                     worked = ReadFileCustom.get_instance(document["name_file"], document["user_id"])

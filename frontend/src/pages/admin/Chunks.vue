@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -10,11 +11,13 @@ import { useAuthStore } from '../../store/auth'
 
 import api from '../../api/axios'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
 const documentId = route.params.id
+const fileName = ref(route.query.name || null)
 const chunks = ref([])
 const loading = ref(false)
 const totalRecords = ref(0)
@@ -65,9 +68,9 @@ const goBack = () => {
         <div class="page-header">
             <div class="flex align-items-center gap-3">
                 <Button icon="pi pi-arrow-left" text rounded @click="goBack" />
-                <h1>Chunk Documento #{{ documentId }}</h1>
+                <h1>{{ t('chunks.title', { fileName: fileName || `Document #${documentId}` }) }}</h1>
             </div>
-            <p>Visualizzazione dei segmenti (chunks) estratti dal documento.</p>
+            <p>{{ t('chunks.subtitle') }}</p>
         </div>
 
         <DataTable v-model:filters="filters" :value="chunks" lazy paginator :rows="rows" :totalRecords="totalRecords"
@@ -75,8 +78,8 @@ const goBack = () => {
             breakpoint="960px">
             <template #header>
                 <div class="table-header">
-                    <span class="p-input-icon-left search-input">
-                        <i class="pi pi-search" />
+                    <span class="p-icon-field search-input">
+                        <i class="pi pi-search p-input-icon" />
                         <InputText v-model="filters['global'].value" placeholder="Cerca nel contenuto..."
                             class="w-full" />
                     </span>
@@ -84,28 +87,28 @@ const goBack = () => {
                 </div>
             </template>
 
-            <Column field="order_chunk" header="#" class="order-column"></Column>
-            <Column field="content" header="Contenuto">
+            <Column field="order_chunk" :header="t('chunks.order')" class="order-column"></Column>
+            <Column field="content" :header="t('chunks.content')">
                 <template #body="{ data }">
                     <div class="chunk-content">
                         <code>{{ data.content }}</code>
                     </div>
                 </template>
             </Column>
-            <Column field="token_count" header="Token" class="hide-mobile"></Column>
-            <Column field="strategy_chunk" header="Strategia" class="hide-mobile">
+            <Column field="token_count" :header="t('chunks.tokens')" class="hide-mobile"></Column>
+            <Column field="strategy_chunk" :header="t('chunks.strategy')" class="hide-mobile">
                 <template #body="{ data }">
                     <Tag :value="data.strategy_chunk" severity="info" />
                 </template>
             </Column>
-            <Column field="is_convert_embeded" header="Embedded">
+            <Column field="is_convert_embeded" :header="t('chunks.embedded')">
                 <template #body="{ data }">
                     <Tag :value="data.is_convert_embeded ? 'Si' : 'No'"
                         :severity="data.is_convert_embeded ? 'success' : 'danger'" />
                 </template>
             </Column>
 
-            <template #empty> Nessun chunk trovato per questo documento. </template>
+            <template #empty> {{ t('common.noData') }} </template>
         </DataTable>
     </div>
 </template>
@@ -134,7 +137,7 @@ const goBack = () => {
 }
 
 .header-subtitle {
-    color: var(--secondary-color);
+    color: var(--text-secondary);
     margin-top: 0.5rem;
     margin-left: 3.5rem;
     font-size: 1.1rem;
@@ -162,20 +165,26 @@ const goBack = () => {
 }
 
 .chunk-content {
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(0, 0, 0, 0.05);
     padding: 1rem;
     border-radius: 8px;
     font-size: 0.85rem;
     line-height: 1.6;
     max-height: 200px;
     overflow-y: auto;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--glass-border);
+}
+
+@media (prefers-color-scheme: dark) {
+    .chunk-content {
+        background: rgba(255, 255, 255, 0.05);
+    }
 }
 
 .chunk-content code {
     white-space: pre-wrap;
     word-break: break-all;
-    color: var(--dark-color);
+    color: var(--text-primary);
 }
 
 @media (max-width: 960px) {
