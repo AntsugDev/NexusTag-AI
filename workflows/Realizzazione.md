@@ -114,3 +114,5 @@ Ho creato lo scheduler per la gestione dei file da processare.
 Ho createo lo scheduler generale e il file per la registrazione degli scheduler; questa è presente nel file **main.py**.
 
 Devo testare se lo scheduler parte e se la gestione dei file da processare funziona e come crea i *chunk*.
+
+**Importante:**  ricorda che l' excel non hai considerato gli sheet
