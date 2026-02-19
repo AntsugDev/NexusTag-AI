@@ -12,7 +12,7 @@ load_dotenv()
 
 
 class GeneralChunck(ABC):
-    def __init__(self, file, type_file, document_id):
+    def __init__(self, file, type_file, document_id = None):
         if not os.path.exists(file):
             raise Exception("File not found")
         self.file = file   

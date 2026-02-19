@@ -25,3 +25,9 @@ class ChunkTable(ModelGeneral):
         
         s = f"DELETE FROM {self.table} WHERE document_id = ?"
         return self.execute(s, (document_id,))
+
+    def is_chunked(self, document_id):
+        s = self.count_search({
+            "id": document_id
+        })
+        return s    

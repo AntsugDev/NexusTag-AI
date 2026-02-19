@@ -24,7 +24,7 @@ class SimpleChunk(GeneralChunck):
             self.separator_standard = ["SELECT", "UPDATE", "INSERT", "DELETE", "\n\n", "\r\n", "\n"]
             self.setToken(300)
 
-    def chunck(self) -> list[dict]:
+    def chunck(self, is_testing:bool=False) -> list[dict]:
         try:
             splitter = RecursiveCharacterTextSplitter(
                 chunk_size=self.standard_token,
@@ -37,8 +37,13 @@ class SimpleChunk(GeneralChunck):
             if self.get_content:
                 splits = splitter.split_text(self.get_content)
                 for i, text in enumerate(splits):
-                   
-                    chunk = self.chunks.insert_chunk({
+                   if is_testing:
+                       result.append({
+                        "order": i,
+                        "content": text
+                       })
+                   else:
+                       chunk = self.chunks.insert_chunk({
                         "id": self.document_id,
                         "content": text,
                         "order_chunk": i,
@@ -49,10 +54,10 @@ class SimpleChunk(GeneralChunck):
                             "chunk_order": i,
                             "type": self.type_file,
                             "char_count": len(text)
+                         })
                         })
-                    })
-                    if chunk:
-                        result.append(chunk)
+                       if chunk:
+                            result.append(chunk)
             else:
                 raise Exception("Errore durante la lettura del file")
             return result
