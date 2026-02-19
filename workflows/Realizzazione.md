@@ -134,3 +134,26 @@ Ho creato anche il pulsante per avviare il processo di elaborazione del file, ma
 - creare una tabella che segni che il file è stato preso in carico dallo scheduler
 - sistemare il chunk per il file excel
 - creare le valutazione (secondo quale logica ...)
+
+
+## 19-02-2026
+
+Con iggi ho creato un file per gli *unit-test*; il file si trova sotto [Unit Test](unit-test\chunk.testing.py)
+
+Attraverso questo file è possibile creare e verificare i chunck, senza sporcare il database.
+
+Per far ciò, ho aggiunto un parametro alle classi che operano il chunck, in modo tale che se fosse a *True*, non crea il record sul database.
+
+Le seguenti parti sono testate:
+
+- creazione dei chunks per un file basico (*txt,log,markdown, sql*)
+- creazione dei chunks per file di tipo *csv e Excel*
+
+** Note da appore **
+
+La divisione al 90 % risulta corretta, va comunque rivista o provata solo i file *markdown*, in quanto la divisione con *lang_chain* e con le chiavi *#* , non sempre è corretta.
+Il resto ho gestisto anche header *Si/No*, sui file csv e excel; va però capito in questo caso se e come far passare l'header all'utenza.
+
+** Per continuare **
+
+Per adesso passo alla valutazione **non fondamentale**, ma solo a fini strutturali, per capire se e come si sono creati i chunck(anche a livello visivo, oltre quanto detto con l'AI).

@@ -10,7 +10,7 @@ def execute_change(ext:str, file_path:str):
              from file.simple_chunk import SimpleChunk
              chunk = SimpleChunk(file_path, ext, None)
              return  chunk.chunck(is_testing=True)
-        case 'csv':
+        case 'csv' | 'xls' | 'xlsx':
             from file.csv_chunck import CsvChunk
             chunk = CsvChunk(file_path, ext, None)
             return  chunk.chunck(is_testing=True)     
@@ -21,7 +21,7 @@ def create_csv(name:str):
    output_path = os.path.join(os.path.dirname(__file__), f"{name}_chunk_testing.csv")
    import pandas as pd
    df = pd.DataFrame(response)
-   df.to_csv(output_path,sep=";",header=["order","content"], index=False)
+   df.to_csv(output_path,sep=";",header=["order","content","metadata"], index=False)
 
 def extract_data_file(file_path:str,file_request:str):
     try:
@@ -55,5 +55,6 @@ try:
     
     print("-"*60)
 except Exception as e:
-    print(f"Errore: {e}")   
+    print(f"Errore: {e}") 
+    raise e  
 

@@ -40,7 +40,8 @@ class SimpleChunk(GeneralChunck):
                    if is_testing:
                        result.append({
                         "order": i,
-                        "content": text
+                        "content": text,
+                        "metadata":None
                        })
                    else:
                        chunk = self.chunks.insert_chunk({
