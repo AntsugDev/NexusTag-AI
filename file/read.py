@@ -20,7 +20,7 @@ class ReadFileCustom:
             raise Exception("Tipo file non supportato")
         print(f"Read file {file_path} and is type: {ext}\n")
         match ext:
-            case 'txt' | 'log' | 'md':
+            case 'txt' | 'log' | 'md' |'sql':
                 c = SimpleChunk(file_path, ext, doc_id)
                 return c.chunck()
             case 'csv':

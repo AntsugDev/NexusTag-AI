@@ -18,10 +18,10 @@ class SimpleChunk(GeneralChunck):
         self.chunks = ChunkTable()
 
         if self.type_file == 'md':
-            self.separator_standard = ["#", "##", "###", "\n\n", "\n", " "]
+            self.separator_standard = ["#", "##", "###",  "\n", " "]
         elif self.type_file == 'sql':
             self.get_content = self.get_content.upper()
-            self.separator_standard = ["SELECT", "UPDATE", "INSERT", "DELETE", "\n\n", "\r\n", "\n"]
+            self.separator_standard = ["SELECT", "UPDATE", "INSERT", "DELETE","CREATE","TABLE","ALTER","DROP","VIEW","PROCEDURE","FUNCTION", "\r\n", "\n"]
             self.setToken(300)
 
     def chunck(self, is_testing:bool=False) -> list[dict]:
