@@ -18,6 +18,7 @@ const messages = {
       process: "Elabora Documento",
       viewError: "Vedi Errore",
       reprocess: "Rielabora",
+      evaluate: "Valuta Qualità",
     },
     menu: {
       home: "Home",
@@ -53,7 +54,9 @@ const messages = {
       scheduler_running: "Scheduler in esecuzione...",
       scheduler_waiting_note:
         "File in attesa di elaborazione da parte dello scheduler",
-      rework: "Documento riabilitato per l'elaborazione"  
+      rework: "Documento riabilitato per l'elaborazione",
+      scheduler_text_waiting: "Attendere l'avvio dello scheduler",
+      scheduler_text_running: "Il processo di scheduler è attivo",
     },
     login: {
       title: "Accedi al Portale",
@@ -92,6 +95,22 @@ const messages = {
       exception: "Errore/Eccezione",
       meta: "Metadati",
     },
+    valutazione: {
+      title: "Valutazione Chunk",
+      subtitle: "Analisi qualitativa e quantitativa dei segmenti estratti.",
+      content: "Contenuto",
+      tokens: "Token",
+      deviation: "Deviazione",
+      margin: "Margine",
+      order: "Ordine",
+      rating: "Valutazione",
+      overall_stats: "Statistiche Generali",
+      total_chunks: "Chunk Totali",
+      avg_tokens: "Media Token",
+      total_tokens: "Totale Token",
+      submit_evaluation: "Invia Valutazione",
+      evaluation_ready: "Tutti i chunk sono stati valutati. Puoi procedere.",
+    },
   },
   en: {
     common: {
@@ -110,6 +129,7 @@ const messages = {
       process: "Process Document",
       viewError: "View Error",
       reprocess: "Rework",
+      evaluate: "Evaluate Quality",
     },
     login: {
       title: "Portal Access",
@@ -161,7 +181,9 @@ const messages = {
       scheduler_remaining: "Next processing in {time} seconds",
       scheduler_running: "Scheduler running...",
       scheduler_waiting_note: "File waiting for processing by the scheduler",
-      rework: "Document re-enabled for processing" 
+      rework: "Document re-enabled for processing",
+      scheduler_text_waiting: "Waiting for scheduler to run",
+      scheduler_text_running: "Scheduler is running",
     },
     chunks: {
       title: "Chunks of {fileName}",
@@ -179,6 +201,22 @@ const messages = {
       row_id: "Row",
       exception: "Error/Exception",
       meta: "Metadata",
+    },
+    valutazione: {
+      title: "Chunk Evaluation",
+      subtitle: "Qualitative and quantitative analysis of extracted segments.",
+      content: "Content",
+      tokens: "Tokens",
+      deviation: "Deviation",
+      margin: "Margin",
+      order: "Order",
+      rating: "Rating",
+      overall_stats: "General Statistics",
+      total_chunks: "Total Chunks",
+      avg_tokens: "Avg Tokens",
+      total_tokens: "Total Tokens",
+      submit_evaluation: "Submit Evaluation",
+      evaluation_ready: "All chunks have been evaluated. You can proceed.",
     },
   },
 };

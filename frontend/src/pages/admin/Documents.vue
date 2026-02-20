@@ -93,6 +93,14 @@ const viewChunks = (data) => {
     })
 }
 
+const viewEvaluation = (data) => {
+    router.push({
+        name: 'Valutazione',
+        params: { id: data.id },
+        query: { name: data.name_file }
+    })
+}
+
 const viewError = async (id) => {
     try {
         const result = await api.get(`/api/jobs/job_failed/${id}/error`)
@@ -245,7 +253,8 @@ const formatSize = (bytes) => {
             </Column>
             <Column field="note" :header="t('documents.note')" class="hide-mobile">
                 <template #body="{ data }">
-                    <small v-if="data.status_file === 'uploaded' ||data.status_file === 'reprocessed' " class="text-secondary italic line-height-1">
+                    <small v-if="data.status_file === 'uploaded' || data.status_file === 'reprocessed'"
+                        class="text-secondary italic line-height-1">
                         {{ t('documents.scheduler_waiting_note') }}
                     </small>
                 </template>
@@ -255,6 +264,9 @@ const formatSize = (bytes) => {
                     <div class="flex justify-content-center gap-2">
                         <Button v-if="data.status_file === 'processed'" icon="pi pi-list" severity="info" text raised
                             rounded @click="viewChunks(data)" v-tooltip.top="t('common.viewChunks')" />
+
+                        <Button v-if="data.status_file === 'processed'" icon="pi pi-star" severity="help" text raised
+                            rounded @click="viewEvaluation(data)" v-tooltip.top="t('common.evaluate')" />
 
                         <Button v-if="data.status_file === 'pending'" icon="pi pi-spin pi-spinner" severity="warning"
                             text raised rounded disabled v-tooltip.top="t('documents.status_pending')" />

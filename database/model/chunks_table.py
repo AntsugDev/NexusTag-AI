@@ -31,6 +31,9 @@ class ChunkTable(ModelGeneral):
         })
         return s
 
+    def get_data_for_column(self,id, column = ['id', 'content','token_count']):
+       return self.statment(query=f"SELECT {','.join(column)} FROM {self.table} WHERE document_id = ?",data=(id,),one=True)
+
     def is_chunked(self, document_id):
         s = self.count_search({
             "id": document_id

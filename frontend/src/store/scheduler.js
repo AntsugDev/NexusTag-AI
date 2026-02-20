@@ -30,7 +30,7 @@ export const useSchedulerStore = defineStore("scheduler", {
       }
     },
 
-    startPolling(interval = 5000) {
+    startPolling(interval = 30000) {
       if (this.timerId) return;
 
       this.fetchStatus();

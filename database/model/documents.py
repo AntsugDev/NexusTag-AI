@@ -18,7 +18,7 @@ class Documents(ModelGeneral):
         })
 
     def get_documents_ready_to_process(self):
-        query = f"SELECT * FROM {self.table} WHERE status_file IN ('uploaded', 'error', 'reprocessed)"
+        query = f"SELECT * FROM {self.table} WHERE status_file IN ('uploaded', 'error', 'reprocessed')"
         return self.statment(query, fetch=True)  
 
     def update_processed(self, id):

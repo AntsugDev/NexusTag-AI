@@ -81,11 +81,11 @@ const handleLogout = () => {
             <template #end>
                 <div class="user-actions">
                     <div v-if="auth.isAdmin && schedulerStore.info" class="scheduler-badge"
-                        :class="{ 'is-running': schedulerStore.isRunning }"
+                        :class="{ 'is-running': schedulerStore.isRunning, 'is-waiting': !schedulerStore.isRunning }"
                         v-tooltip.bottom="schedulerStore.isRunning ? t('documents.scheduler_running') : t('documents.scheduler_remaining', { time: schedulerStore.formattedRemaining })">
                         <i v-if="schedulerStore.isRunning" class="pi pi-spin pi-spinner"></i>
                         <i v-else class="pi pi-clock"></i>
-                        <span class="countdown-text">{{ schedulerStore.formattedRemaining }}</span>
+                        <span class="countdown-text">{{schedulerStore.isRunning ? t('documents.scheduler_text_running') : t('documents.scheduler_text_waiting')}}</span>
                     </div>
 
                     <Button :label="locale.toUpperCase()" icon="pi pi-globe" text @click="toggleLanguage"
@@ -158,14 +158,20 @@ const handleLogout = () => {
 }
 
 .scheduler-badge.is-running {
-    color: var(--primary-color);
-    background: rgba(var(--primary-color-rgb, 0, 123, 255), 0.15);
-    border-color: var(--primary-color);
+    color: #fff;
+    background: #31C950;
+    border-color: #31C950;
 }
 
 .countdown-text {
     font-weight: 700;
     font-family: monospace;
+}
+
+.scheduler-badge.is-waiting {
+    color: #fff;
+    background: #F54927;
+    border-color: #F54927;
 }
 
 .username {

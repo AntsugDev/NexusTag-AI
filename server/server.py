@@ -84,6 +84,12 @@ jobs_router = APIRouter(
     dependencies=[Depends(verify_token)]
 )
 
+valutazione_router = APIRouter(
+    prefix="/api/valutazione",
+    tags=["valutations"],
+    dependencies=[Depends(verify_token)]
+)
+
 from server.controller.user_controller import user_controller
 user_controller(user_router)
 
@@ -93,10 +99,13 @@ documents_controller(documents_router)
 from server.controller.jobs_controller import jobs_controller
 jobs_controller(jobs_router)
 
+from server.controller.valutazione_controller import valutazione_controller
+valutazione_controller(valutazione_router)
 
 app.include_router(user_router)
 app.include_router(documents_router)
 app.include_router(jobs_router)
+app.include_router(valutazione_router)
 
 # Serve Frontend
 frontend_path = os.path.join(os.getcwd(), "static")

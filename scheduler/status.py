@@ -34,9 +34,6 @@ class SchedulerStatus:
 
         seconds_to_next = None
         if next_run:
-            # next_run is offset-aware (UTC), now is naive. 
-            # Need to handle timezone if next_run is aware.
-            # Usually APScheduler uses aware datetimes if configured.
             if next_run.tzinfo:
                 now_aware = datetime.datetime.now(next_run.tzinfo)
                 seconds_to_next = max(0, (next_run - now_aware).total_seconds())

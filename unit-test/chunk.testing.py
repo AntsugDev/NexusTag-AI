@@ -6,13 +6,12 @@ def execute_change(ext:str, file_path:str):
     print(f"Stiamo procendo con un file di tipo {ext}")
     match ext:
         case 'txt' | 'log' |'sql':
-             
              from file.simple_chunk import SimpleChunk
              chunk = SimpleChunk(file_path, ext, None)
              return  chunk.chunck(is_testing=True)
         case 'md':
-            from file.markdown_chunk import MarkdownChunk
-            chunk = MarkdownChunk(file_path, ext, None)
+            from file.markdown_chunk import MarkDownChunk
+            chunk = MarkDownChunk(file_path, ext, None)
             return  chunk.chunck(is_testing=True)     
         case 'csv' | 'xls' | 'xlsx':
             from file.csv_chunck import CsvChunk
@@ -39,7 +38,7 @@ def extract_data_file(file_path:str,file_request:str):
 try:
     print("-"*30+"CHUNCK TESTING FILE"+"-"*30+"\n")
 
-    file_request = input("Inserisci il nome del file:")
+    file_request = input("Inserisci il nome del file(il file deve essere in import-data):")
     file_path    = os.path.join('import-data', file_request)
     
     if os.path.exists(file_path):

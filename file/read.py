@@ -5,7 +5,7 @@ import pandas as pd
 from .simple_chunk import SimpleChunk
 from .csv_chunck import CsvChunk
 from .xls_chunck import XlsChunk
-from .markdown_chunk import MarkdownChunk
+from .markdown_chunk import MarkDownChunk
 import mimetypes
 from database.model.documents import Documents
 
@@ -25,7 +25,7 @@ class ReadFileCustom:
                 c = SimpleChunk(file_path, ext, doc_id)
                 return c.chunck()
             case 'md':
-                c = MarkdownChunk(file_path, ext, doc_id)
+                c = MarkDownChunk(file_path, ext, doc_id)
                 return c.chunck()
             case 'csv':
                 c = CsvChunk(file_path, ext, doc_id)

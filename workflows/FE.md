@@ -165,3 +165,35 @@ Per una diagnosi completa del sistema, è stata introdotta una gestione centrali
 - **Dettagli Eccezioni**: La tabella mostra l'ID del documento, la riga del processo e l'eccezione riscontrata. Cliccando sull'errore, si apre un dialog con il trace completo del problema.
 - **Integrazione API**: Nuovi endpoint lato backend permettono di consultare lo storico dei fallimenti con paginazione server-side.
 - **Tracciabilità**: Ogni errore è collegato al documento originale, permettendo all'amministratore di capire esattamente cosa ha causato il blocco e intervenire.
+
+### Valutazione Qualitativa Chunk (Audit)
+
+Introdotta una nuova fase di revisione umana per garantire la qualità dei segmenti estratti prima del loro impiego finale:
+
+- **Selezione Casistica**: Il sistema seleziona automaticamente un campione rappresentativo di chunk per ogni documento (il primo, l'ultimo e una selezione casuale basata sulla dimensione totale).
+- **Metriche Quantitative**:
+  - **Token Count**: Visualizzazione precisa del numero di token per ogni segmento.
+  - **Deviazione**: Calcolo automatico della differenza rispetto alla media del documento.
+  - **Margine**: Indicatore visivo (Tag colorati) che evidenzia segmenti con deviazioni critiche (es. troppo lunghi o troppo corti rispetto alla media).
+- **Revisione Umana (Rating)**: L'amministratore può assegnare un punteggio da 1 a 5 ad ogni chunk campionato per valutare la coerenza semantica e la qualità della segmentazione.
+- **Statistiche di Riepilogo**: L'interfaccia include un riepilogo globale (Header della tabella) con:
+  - Totale dei chunk del documento.
+  - Media dei token globale.
+  - Somma totale dei token.
+- **Feedback Operativo**: Un pulsante di invio finale viene abilitato solo quando è stato completato il campionamento minimo (almeno 10 chunk) e tutti i campi sono stati compilati.
+- **Integrazione UX**: Accesso diretto dalla lista documenti tramite l'icona "Stella" (Valuta Qualità).
+
+### Evoluzione UI/UX: Fieldset e Layout Sematico
+
+L'interfaccia di valutazione è stata ulteriormente raffinata per garantire un'esperienza di audit professionale:
+
+- **Componenti Fieldset**: Sostituite le card generiche con il componente `Fieldset` di PrimeVue. Questo permette di utilizzare la `legend` per ospitare i metadati (ordine, token, deviazione), creando una struttura visiva più ordinata.
+- **Layout Orizzontale a Sidebar**: Ogni elemento è diviso in due aree: a sinistra il contenuto testuale (sfondo bianco puro, bordo rinforzato) e a destra una "Sidebar di Valutazione" dedicata esclusivamente al rating, isolando visivamente l'azione di audit dalla lettura.
+- **Indicatori Critici**: Implementata la colorazione dinamica per le deviazioni: le deviazioni negative vengono ora evidenziate in **Rosso Intenso** (`danger`), permettendo di identificare istantaneamente chunk sottodimensionati.
+- **Footer Riepilogo "Galleggiante"**: Il footer è stato trasformato in un elemento "detached" (staccato dai bordi), semitrasparente e con effetto sfocatura (`backdrop-blur`), che ospita le statistiche di progresso e il pulsante di invio con uno stile moderno e non invasivo.
+
+### Note Tecniche di Implementazione
+
+- **Ottimizzazione Backend**: Implementata una conversione robusta degli oggetti `sqlite3.Row` in dizionari Python nel controller di valutazione, superando i limiti di immutabilità del database.
+- **Integrazione Componenti PrimeVue**: Sfruttate le funzionalità avanzate di `Fieldset` e `Rating` (con icone personalizzate) per un'interfaccia semantica e accessibile.
+- **Internazionalizzazione (i18n)**: Copertura totale (IT/EN) per tutte le nuove etichette di audit e messaggi di validazione.

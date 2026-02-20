@@ -21,7 +21,7 @@ class MarkDownChunk(GeneralChunck):
             ("#", "h1"),
             ("##", "h2"),
             ("###", "h2"),
-            ("---", "h_sep1")  
+            ("---", "h_sep1")  ,
             ("***", "h_sep2")  
         ]
 
@@ -38,34 +38,54 @@ class MarkDownChunk(GeneralChunck):
                 is_separator_regex=False
             )
             result = []
+            global_order = 0  
+
             if self.get_content:
                 for doc in self.docs_by_header:
-                    splits = splitter.split_text(doc)
-                    for i, text in enumerate(splits):
+                    headers = doc.metadata
+                    header_context = ""
+                    
+                    if headers:
+                        last_header_value = list(headers.values())[-1]
+                        header_context = f"{last_header_value}\n\n"
+                    
+                    full_text = f"{header_context}{doc.page_content}"
+
+                    splits = splitter.split_text(full_text)
+                    
+                    for text in splits:
+                        header_metadata_json = json.dumps(headers) if headers else None
+                        
                         if is_testing:
                             result.append({
-                        "order": i,
-                        "content": text,
-                        "metadata":None
-                       })
+                                "order": global_order,
+                                "content": text,
+                                "metadata": header_metadata_json
+                            })
                         else:
-                            chunk = self.chunks.insert_chunk({
-                                        "id": self.document_id,
-                                        "content": text,
-                                        "order_chunk": i,
-                                        "strategy_chunk": self.strategy_chunk(),
-                                        "token_count": self.count_tokens(text),
-                                        "overlap_token": self.standard_overlap,
-                                        "metadata": json.dumps({
-                                            "chunk_order": i,
-                                            "type": self.type_file,
-                                            "char_count": len(text)
-                                        })
-                                    })
-                        if chunk:
-                            result.append(chunk)
+                            # Inserimento nel database
+                            chunk_data = {
+                                "id": self.document_id,
+                                "content": text,
+                                "order_chunk": global_order,
+                                "strategy_chunk": self.strategy_chunk(),
+                                "token_count": self.count_tokens(text),
+                                "overlap_token": self.standard_overlap,
+                                "metadata": json.dumps({
+                                    "chunk_order": global_order,
+                                    "type": self.type_file,
+                                    "char_count": len(text),
+                                    "headers": headers
+                                })
+                            }
+                            chunk_record = self.chunks.insert_chunk(chunk_data)
+                            if chunk_record:
+                                result.append(chunk_record)
+                        
+                        global_order += 1 
             else:
                 raise Exception("Errore durante la lettura del file")
+            
             return result
         except Exception as e:
             raise e
