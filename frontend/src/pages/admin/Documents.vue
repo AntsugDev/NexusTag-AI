@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import DataTable from 'primevue/datatable'
@@ -11,6 +11,7 @@ import BlockUI from 'primevue/blockui'
 import ProgressBar from 'primevue/progressbar'
 import Dialog from 'primevue/dialog'
 import { useAuthStore } from '../../store/auth'
+import { useSchedulerStore } from '../../store/scheduler'
 
 import api from '../../api/axios'
 import { useToast } from 'primevue/usetoast'
@@ -18,6 +19,7 @@ import { useToast } from 'primevue/usetoast'
 const { t } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
+const schedulerStore = useSchedulerStore()
 const toast = useToast()
 
 const documents = ref([])
@@ -33,6 +35,15 @@ const filters = ref({
     name_file: { value: null, matchMode: 'contains' },
     status_file: { value: null, matchMode: 'equals' }
 })
+
+// Auto-refresh lista quando lo scheduler parte
+watch(() => schedulerStore.isRunning, (newValue, oldValue) => {
+    if (newValue === true && oldValue === false) {
+        console.log('Scheduler started, refreshing documents list...')
+        loadLazyData()
+    }
+})
+
 
 const loadLazyData = async (event) => {
     loading.value = true
@@ -61,6 +72,13 @@ const loadLazyData = async (event) => {
 
 onMounted(() => {
     loadLazyData()
+    schedulerStore.startPolling()
+})
+
+onUnmounted(() => {
+    // Optionally stop polling if you only want it on this page, 
+    // but the user wants it global, so we might want to keep it running
+    // or start it in App.vue instead.
 })
 
 const onPage = (event) => {
@@ -80,6 +98,28 @@ const viewError = async (id) => {
         const result = await api.get(`/api/jobs/job_failed/${id}/error`)
         errorMessage.value = result.data.result.error
         showErrorDialog.value = true
+
+    } catch (e) {
+        console.error('Error fetching error details:', e)
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: 'Impossibile recuperare i dettagli dell\'errore',
+            life: 3000
+        })
+    }
+}
+
+const reprocessDocument = async (id) => {
+    try {
+        await api.delete(`/api/documents/rework/${id}`)
+        loadLazyData()
+        toast.add({
+            severity: 'success',
+            summary: t('common.success'),
+            detail: t('documents.rework'),
+            life: 3000
+        })
     } catch (e) {
         console.error('Error fetching error details:', e)
         toast.add({
@@ -115,7 +155,6 @@ const pollStatus = async (id) => {
             })
             loadLazyData()
         } else {
-            // Schedula il prossimo controllo tra 2 secondi
             setTimeout(() => pollStatus(id), 2000)
         }
     } catch (e) {
@@ -124,15 +163,14 @@ const pollStatus = async (id) => {
     }
 }
 
-// La funzione processDocument è stata rimossa perché l'elaborazione è ora gestita esclusivamente via scheduler
-
-
 const getStatusSeverity = (status) => {
     switch (status) {
         case 'processed': return 'success'
         case 'pending': return 'warning'
         case 'uploaded': return 'info'
-        case 'error': return 'danger'
+        case 'error':
+        case 'reprocessed':
+            return 'danger'
         default: return 'secondary'
     }
 }
@@ -144,6 +182,7 @@ const formatSize = (bytes) => {
     const i = Math.floor(Math.log(bytes) / Math.log(k))
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
+
 </script>
 
 <template>
@@ -163,6 +202,7 @@ const formatSize = (bytes) => {
             <h1>{{ t('documents.title') }}</h1>
             <p>{{ t('documents.subtitle') }}</p>
         </div>
+
 
         <DataTable v-model:filters="filters" :value="documents" lazy paginator :rows="rows" :totalRecords="totalRecords"
             :loading="loading" @page="onPage($event)" class="glass-panel main-table" filterDisplay="menu"
@@ -187,8 +227,10 @@ const formatSize = (bytes) => {
             <Column field="topic" :header="t('upload.topicLabel')" sortable></Column>
             <Column field="status_file" :header="t('documents.status')" sortable filter>
                 <template #body="{ data }">
-                    <Tag :value="t(`documents.status_${data.status_file}`)"
-                        :severity="getStatusSeverity(data.status_file)" class="status-tag" />
+                    <div class="flex flex-column gap-1">
+                        <Tag :value="t(`documents.status_${data.status_file}`)"
+                            :severity="getStatusSeverity(data.status_file)" class="status-tag" />
+                    </div>
                 </template>
             </Column>
             <Column field="size" :header="t('documents.size')" class="hide-mobile">
@@ -199,6 +241,13 @@ const formatSize = (bytes) => {
             <Column field="created_at" :header="t('documents.date')" sortable class="hide-mobile">
                 <template #body="{ data }">
                     {{ new Date(data.created_at).toLocaleString() }}
+                </template>
+            </Column>
+            <Column field="note" :header="t('documents.note')" class="hide-mobile">
+                <template #body="{ data }">
+                    <small v-if="data.status_file === 'uploaded' ||data.status_file === 'reprocessed' " class="text-secondary italic line-height-1">
+                        {{ t('documents.scheduler_waiting_note') }}
+                    </small>
                 </template>
             </Column>
             <Column :header="t('common.actions')" class="actions-column">
@@ -212,6 +261,9 @@ const formatSize = (bytes) => {
 
                         <Button v-if="data.status_file === 'error'" icon="pi pi-exclamation-triangle" severity="warning"
                             text raised rounded @click="viewError(data.id)" v-tooltip.top="t('common.viewError')" />
+
+                        <Button v-if="data.status_file === 'processed'" icon="pi pi-sync" severity="danger" text raised
+                            rounded @click="reprocessDocument(data.id)" v-tooltip.top="t('common.reprocess')" />
                     </div>
                 </template>
             </Column>
@@ -257,9 +309,19 @@ const formatSize = (bytes) => {
     font-size: 1.1rem;
 }
 
+.italic {
+
+    font-style: italic;
+}
+
+.line-height-1 {
+    line-height: 1.2;
+}
+
 .main-table {
     border: none;
 }
+
 
 .table-header {
     display: flex;
@@ -325,17 +387,5 @@ const formatSize = (bytes) => {
         width: 100%;
         text-align: left;
     }
-}
-
-.justify-content-between {
-    justify-content: space-between;
-}
-
-.align-items-center {
-    align-items: center;
-}
-
-.w-full {
-    width: 100%;
 }
 </style>

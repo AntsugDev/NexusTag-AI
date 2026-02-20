@@ -19,10 +19,8 @@ class ChunkTable(ModelGeneral):
         })
 
     def delete_by_document(self, document_id):
-        # Clean up both the chunks table and the virtual vector table
-        s_vss = f"DELETE FROM vss_chunks WHERE chunk_id IN (SELECT id FROM {self.table} WHERE document_id = ?)"
-        self.execute(s_vss, (document_id,))
-        
+        # s_vss = f"DELETE FROM vss_chunks WHERE chunk_id IN (SELECT id FROM {self.table} WHERE document_id = ?)"
+        # self.execute(s_vss, (document_id,))
         s = f"DELETE FROM {self.table} WHERE document_id = ?"
         return self.execute(s, (document_id,))
 
@@ -37,4 +35,6 @@ class ChunkTable(ModelGeneral):
         s = self.count_search({
             "id": document_id
         })
-        return self.execute(s, (document_id,))    
+        return self.execute(s, (document_id,))   
+
+      

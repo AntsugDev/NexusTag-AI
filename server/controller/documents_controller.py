@@ -107,4 +107,20 @@ def documents_controller(documents_router):
                 suggestions = [item[0] for item in items if item and item[0]]
             return response(msg="Suggestions retrieved", data=suggestions)
         except Exception as e:
-            raise ExceptionRequest(message=str(e), status_code=422)        
+            raise ExceptionRequest(message=str(e), status_code=422)  
+
+    @documents_router.delete("/rework/{id}",tags=["documents"], description="Rework document for create the chunks")
+    def rework_document(id: int, user: dict = Depends(verify_token)):
+        try:
+            from database.model.chunks_table import ChunkTable
+            dd = ChunkTable()
+            document = dd.delete_by_document(id)
+            if document:
+                from database.model.documents import Documents
+                doc_model = Documents()
+                doc_model.update_reprocessed(id)
+            else:
+                raise HTTPException(status_code=404, detail="Document not found")    
+            return response(msg="Reworked with success, wait for processing")
+        except Exception as e:
+            raise ExceptionRequest(message=str(e), status_code=422)              

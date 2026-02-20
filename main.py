@@ -17,7 +17,13 @@ if __name__ == "__main__":
     register_all_jobs(scheduler)
     scheduler.start()
 
+    # Registra lo scheduler nel singleton per monitoraggio
+    from scheduler.status import scheduler_status
+    scheduler_status.set_scheduler(scheduler)
+
     if ENV == "development":   
         uvicorn.run(app, host="0.0.0.0", port=8081, log_level="info")
+
+
 
     

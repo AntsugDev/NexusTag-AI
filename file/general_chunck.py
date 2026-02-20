@@ -1,3 +1,4 @@
+import tiktoken
 from abc import ABC, abstractmethod
 import os
 from langchain_ollama import OllamaEmbeddings
@@ -8,8 +9,6 @@ from dotenv import load_dotenv
 from database.model.emebed_model import EmbedModel
 
 load_dotenv()
-
-
 
 class GeneralChunck(ABC):
     def __init__(self, file, type_file, document_id = None):
@@ -35,6 +34,18 @@ class GeneralChunck(ABC):
         self.ollama = OllamaEmbeddings(
              model=self.ollama_model,
         )
+        
+        # Inizializzazione tokenizer
+        try:
+            self.tokenizer = tiktoken.get_encoding("cl100k_base")
+        except Exception:
+            self.tokenizer = tiktoken.encoding_for_model("gpt-3.5-turbo")
+
+    def count_tokens(self, text: str) -> int :
+        """Calcola il numero reale di token di una stringa."""
+        if not text:
+            return 0
+        return len(self.tokenizer.encode(text))
 
     def setToken(self, token:int): 
         if token > self.k_max_token or token < self.k_min_token:
@@ -42,7 +53,7 @@ class GeneralChunck(ABC):
         self.standard_token = token
 
     def setOverlap(self, overlap:int):
-        if token > int(os.getenv("K_MAX_OVERLAP", 20)) or token < int(os.getenv("K_MIN_OVERLAP", 10)):
+        if overlap > int(os.getenv("K_MAX_OVERLAP", 20)) or overlap < int(os.getenv("K_MIN_OVERLAP", 10)):
             raise Exception("The value overlap is between 10 and 20")
         self.standard_overlap = overlap    
 
@@ -62,11 +73,19 @@ class GeneralChunck(ABC):
 
     async def embed(self):
        try:
-        chunck_pre = self.chunck()
-        if chunck_pre :
-            await Embed(chunck_pre,self.document_id,self.row_id,self.strategy_chunk,self.token_count,self.overlap_token).embed()
+        chunks = self.chunck()
+        if chunks :
+            # Passiamo i parametri corretti alla classe Embed
+            # row_id non è ancora definito a livello di classe, probabilmente si riferisce al document_id
+            await Embed(
+                chunks=chunks,
+                document_id=self.document_id,
+                strategy_chunk=self.strategy_chunk(),
+                token_count=self.standard_token,
+                overlap_token=self.standard_overlap
+            ).embed()
         else:
-            raise Exception("Cannot create embeded because chuck is null or is not reading.")    
+            raise Exception("Cannot create embedded because chunks is null or is not reading.")    
 
        except Exception as e:
         raise e 

@@ -17,11 +17,13 @@ const messages = {
       noData: "Nessun dato trovato",
       process: "Elabora Documento",
       viewError: "Vedi Errore",
+      reprocess: "Rielabora",
     },
     menu: {
       home: "Home",
       upload: "Carica documento",
       list: "Lista documenti",
+      failed: "Job Falliti",
     },
     upload: {
       title: "Carica Nuovo Documento",
@@ -40,11 +42,18 @@ const messages = {
       name: "Nome File",
       status: "Stato",
       size: "Dimensione",
+      note: "Note",
       date: "Caricato il",
       status_uploaded: "Caricato",
       status_pending: "In Elaborazione",
       status_processed: "Elaborato",
+      status_reprocessed: "Da rielaborare",
       status_error: "Errore",
+      scheduler_remaining: "Prossima elaborazione tra {time} secondi",
+      scheduler_running: "Scheduler in esecuzione...",
+      scheduler_waiting_note:
+        "File in attesa di elaborazione da parte dello scheduler",
+      rework: "Documento riabilitato per l'elaborazione"  
     },
     login: {
       title: "Accedi al Portale",
@@ -74,6 +83,15 @@ const messages = {
       strategy: "Strategia",
       embedded: "Embedded",
     },
+    failedJobs: {
+      title: "Log Errori Scheduler",
+      subtitle:
+        "Visualizzazione dei fallimenti riscontrati durante i processi automatici.",
+      doc_id: "ID Doc",
+      row_id: "Riga",
+      exception: "Errore/Eccezione",
+      meta: "Metadati",
+    },
   },
   en: {
     common: {
@@ -91,6 +109,7 @@ const messages = {
       noData: "No data found",
       process: "Process Document",
       viewError: "View Error",
+      reprocess: "Rework",
     },
     login: {
       title: "Portal Access",
@@ -113,6 +132,7 @@ const messages = {
       home: "Home",
       upload: "Upload Document",
       list: "Document List",
+      failed: "Failed Jobs",
     },
     upload: {
       title: "Upload New Document",
@@ -131,11 +151,17 @@ const messages = {
       name: "File Name",
       status: "Status",
       size: "Size",
+      note: "Note",
       date: "Uploaded On",
       status_uploaded: "Uploaded",
       status_pending: "Processing",
       status_processed: "Processed",
+      status_reprocessed: "To be reworked",
       status_error: "Error",
+      scheduler_remaining: "Next processing in {time} seconds",
+      scheduler_running: "Scheduler running...",
+      scheduler_waiting_note: "File waiting for processing by the scheduler",
+      rework: "Document re-enabled for processing" 
     },
     chunks: {
       title: "Chunks of {fileName}",
@@ -145,6 +171,14 @@ const messages = {
       tokens: "Tokens",
       strategy: "Strategy",
       embedded: "Embedded",
+    },
+    failedJobs: {
+      title: "Scheduler Error Logs",
+      subtitle: "View failures encountered during automatic processes.",
+      doc_id: "Doc ID",
+      row_id: "Row",
+      exception: "Error/Exception",
+      meta: "Metadata",
     },
   },
 };

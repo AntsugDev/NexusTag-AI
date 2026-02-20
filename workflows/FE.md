@@ -142,4 +142,26 @@ L'ultima evoluzione ha introdotto una netta separazione dei ruoli e una gestione
 
 ### Scheduler Notturno
 
-- **Esecuzione Ottimizzata**: Lo scheduler automatico si attiva esclusivamente **una volta al giorno** alle **03:00**, riducendo il carico sul server durante le ore di punta.
+- **Esecuzione Ottimizzata**: Lo scheduler automatico si attiva periodicamente (configurato per intervalli) per processare i file in coda senza intervento manuale.
+
+### Monitoraggio Scheduler e Feedback Utente
+
+L'intero ciclo di vita dell'elaborazione è ora trasparente per l'utente e monitorato globalmente:
+
+- **Stato Documento**: Per i file appena caricati (stato `uploaded`), è stata aggiunta una nota informativa: _"File in attesa di elaborazione da parte dello scheduler"_. Questo chiarisce all'utente che non deve agire manualmente.
+- **Badge Globale (Navbar)**: Lo stato dello scheduler è stato spostato nel layout principale (`DefaultLayout.vue`), rendendolo visibile in **tutte le pagine** per l'amministratore.
+  - Un **countdown in tempo reale** (minuti:secondi) alla prossima esecuzione prevista.
+  - Un'animazione di **"Esecuzione in corso"** quando il sistema sta effettivamente processando i file.
+- **Architettura Global Store (Pinia)**: Implementato `useSchedulerStore` per gestire centralmente il polling verso l'API `/api/jobs/status`, garantendo che i dati dello scheduler siano coerenti e disponibili ovunque nel frontend.
+- **Infrastruttura di Monitoraggio Backend**: Implementato un singleton nel backend e un'API dedicata per sincronizzare lo stato dello scheduler con il frontend.
+- **Internazionalizzazione**: Tutte le stringhe relative allo scheduler (note di attesa, countdown, stati) sono state localizzate in Italiano e Inglese.
+- **Design Premium**: Il badge globale utilizza icone dinamiche (orologio/spinner) e un font monospace per una leggibilità ottimale del timer.
+
+### Monitoraggio Fallimenti (Job Failed Logs)
+
+Per una diagnosi completa del sistema, è stata introdotta una gestione centralizzata degli errori:
+
+- **Pagina Log Errori**: Una nuova sezione amministrativa ("Job Falliti") elenca tutti i problemi riscontrati dallo scheduler durante l'elaborazione.
+- **Dettagli Eccezioni**: La tabella mostra l'ID del documento, la riga del processo e l'eccezione riscontrata. Cliccando sull'errore, si apre un dialog con il trace completo del problema.
+- **Integrazione API**: Nuovi endpoint lato backend permettono di consultare lo storico dei fallimenti con paginazione server-side.
+- **Tracciabilità**: Ogni errore è collegato al documento originale, permettendo all'amministratore di capire esattamente cosa ha causato il blocco e intervenire.

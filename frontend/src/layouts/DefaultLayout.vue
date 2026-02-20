@@ -3,12 +3,20 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../store/auth'
+import { useSchedulerStore } from '../store/scheduler'
 import Menubar from 'primevue/menubar'
 import Button from 'primevue/button'
+import { onMounted } from 'vue'
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
+const schedulerStore = useSchedulerStore()
 const router = useRouter()
+
+onMounted(() => {
+    schedulerStore.startPolling()
+})
+
 
 const items = computed(() => {
     const baseItems = [
@@ -30,7 +38,13 @@ const items = computed(() => {
             icon: 'pi pi-list',
             command: () => router.push({ name: 'Admin' })
         })
+        baseItems.push({
+            label: t('menu.failed'),
+            icon: 'pi pi-exclamation-circle',
+            command: () => router.push({ name: 'FailedJobs' })
+        })
     } else {
+
         baseItems.push({
             label: t('menu.upload'),
             icon: 'pi pi-upload',
@@ -66,6 +80,14 @@ const handleLogout = () => {
             </template>
             <template #end>
                 <div class="user-actions">
+                    <div v-if="auth.isAdmin && schedulerStore.info" class="scheduler-badge"
+                        :class="{ 'is-running': schedulerStore.isRunning }"
+                        v-tooltip.bottom="schedulerStore.isRunning ? t('documents.scheduler_running') : t('documents.scheduler_remaining', { time: schedulerStore.formattedRemaining })">
+                        <i v-if="schedulerStore.isRunning" class="pi pi-spin pi-spinner"></i>
+                        <i v-else class="pi pi-clock"></i>
+                        <span class="countdown-text">{{ schedulerStore.formattedRemaining }}</span>
+                    </div>
+
                     <Button :label="locale.toUpperCase()" icon="pi pi-globe" text @click="toggleLanguage"
                         class="lang-btn" />
                     <span v-if="auth.user" class="username">{{ auth.user.username }}</span>
@@ -73,6 +95,7 @@ const handleLogout = () => {
                         @click="handleLogout" />
                 </div>
             </template>
+
         </Menubar>
 
         <main class="layout-content">
@@ -122,7 +145,31 @@ const handleLogout = () => {
     gap: 0.75rem;
 }
 
+.scheduler-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.6rem;
+    background: rgba(var(--primary-color-rgb, 0, 123, 255), 0.1);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    border: 1px solid rgba(var(--primary-color-rgb, 0, 123, 255), 0.1);
+}
+
+.scheduler-badge.is-running {
+    color: var(--primary-color);
+    background: rgba(var(--primary-color-rgb, 0, 123, 255), 0.15);
+    border-color: var(--primary-color);
+}
+
+.countdown-text {
+    font-weight: 700;
+    font-family: monospace;
+}
+
 .username {
+
     font-weight: 600;
     color: var(--text-secondary);
     font-size: 0.9rem;

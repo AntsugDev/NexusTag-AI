@@ -5,11 +5,15 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 def execute_change(ext:str, file_path:str):
     print(f"Stiamo procendo con un file di tipo {ext}")
     match ext:
-        case 'txt' | 'log' | 'md' |'sql':
+        case 'txt' | 'log' |'sql':
              
              from file.simple_chunk import SimpleChunk
              chunk = SimpleChunk(file_path, ext, None)
              return  chunk.chunck(is_testing=True)
+        case 'md':
+            from file.markdown_chunk import MarkdownChunk
+            chunk = MarkdownChunk(file_path, ext, None)
+            return  chunk.chunck(is_testing=True)     
         case 'csv' | 'xls' | 'xlsx':
             from file.csv_chunck import CsvChunk
             chunk = CsvChunk(file_path, ext, None)

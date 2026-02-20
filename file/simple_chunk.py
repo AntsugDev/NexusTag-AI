@@ -49,7 +49,7 @@ class SimpleChunk(GeneralChunck):
                         "content": text,
                         "order_chunk": i,
                         "strategy_chunk": self.strategy_chunk(),
-                        "token_count": self.standard_token,
+                        "token_count": self.count_tokens(text),
                         "overlap_token": self.standard_overlap,
                         "metadata": json.dumps({
                             "chunk_order": i,

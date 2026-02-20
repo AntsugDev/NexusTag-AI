@@ -89,8 +89,8 @@ class CsvChunk(GeneralChunck):
                                 "content": json_content,
                                 "order_chunk": count,
                                 "strategy_chunk": self.strategy_chunk(),
-                                "token_count": None,
-                                "overlap_token": None,
+                                "token_count": self.count_tokens(json_content),
+                                "overlap_token": 0,
                                 "metadata": json.dumps({
                                     "chunk_order": count,
                                     "type": self.type_file,
@@ -123,8 +123,8 @@ class CsvChunk(GeneralChunck):
                             "content": json_content,
                             "order_chunk": count,
                             "strategy_chunk": self.strategy_chunk(),
-                            "token_count": None,
-                            "overlap_token": None,
+                            "token_count": self.count_tokens(json_content),
+                            "overlap_token": 0,
                             "metadata": json.dumps({
                                 "chunk_order": count,
                                 "type": self.type_file,
