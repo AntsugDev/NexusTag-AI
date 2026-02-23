@@ -157,3 +157,22 @@ Il resto ho gestisto anche header *Si/No*, sui file csv e excel; va però capito
 ** Per continuare **
 
 Per adesso passo alla valutazione **non fondamentale**, ma solo a fini strutturali, per capire se e come si sono creati i chunck(anche a livello visivo, oltre quanto detto con l'AI).
+
+# 23-02-2026
+
+Lato fe ho costruito la parte di validazione, dove è possibile valutare i chunck per semantica e vedere un grafico della deviazione dei token.
+
+Ho creato l'api per inserire i dati in tabella.
+
+La tabella oltre i campi già previsti, dovrebbe avere un campo *is_evalutation*, dove mettere la valutazione finale del documento e della sua trasformazione.
+
+Inoltre, fare vedere a video la strategia usata.
+
+La valutazione finale deve avere dei pesi che posso immaginare così:
+- se la media dei token può avere il 60% del peso, mentre la valutazione visiva il 40% ; questo comporta che il valore finale resintirà più dei token che del resto. Il valore finale sarebbe da riportarlo compreso tra 0 e 1.
+Aggiungiamo anche una serie di note legate al risultato, fisse ma comunque fondamentale; cosa che va aggiunta anche alla tabella.
+
+Potrei anche prevedere, in alcuni casi, la possibilità di rifare i chunks; questo comporta che:
+- possibilità lato fe di cambiare il range dei token e l'overlap ( testi)
+- per md non passare dal lato del recursivo 
+- per csv excel aumentare o diminuire le righe
