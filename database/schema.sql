@@ -112,3 +112,16 @@ CREATE TABLE JOBS_FAILED (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
 );
+
+DROP TABLE IF EXISTS evaluations;
+CREATE TABLE evaluations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id INTEGER NOT NULL,
+    avg_score REAL NOT NULL,
+    total_score REAL NOT NULL,
+    random_chunks_evaluation INTEGER NOT NULL,
+    metadata JSON NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
+);

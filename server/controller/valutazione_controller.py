@@ -96,3 +96,15 @@ def valutazione_controller(router: APIRouter):
             return response(msg="Valutations", data=r)
         except Exception as e:
            raise ExceptionRequest(message=str(e), status_code=422)
+
+@router.post("/",tags=["valutations"], description="Insert valutation")
+def insert_valutation(evaluations_request: EvaluationsRequest,user: dict = Depends(verify_token)):
+    try:
+        if user.get("username") != "admin":
+            raise HTTPException(status_code=403, detail="Forbidden: Admin only")
+        from database.model.evalutations import Evaluations
+        evaluations = Evaluations()
+        evaluations.insert_evaluation(evaluations_request.document_id, evaluations_request.avg_score, evaluations_request.total_score, evaluations_request.random_chunks_evaluation, evaluations_request.metadata)
+        return response(msg="Valutation inserted", data={})
+    except Exception as e:
+        raise ExceptionRequest(message=str(e), status_code=422)

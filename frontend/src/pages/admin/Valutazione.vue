@@ -8,6 +8,8 @@ import Button from 'primevue/button'
 import Rating from 'primevue/rating'
 import Tag from 'primevue/tag'
 import Fieldset from 'primevue/fieldset'
+import Chart from 'primevue/chart'
+import Dialog from 'primevue/dialog'
 import api from '../../api/axios'
 import { useToast } from 'primevue/usetoast'
 
@@ -22,6 +24,102 @@ const chunks = ref([])
 const stats = ref({})
 const loading = ref(false)
 const evaluations = ref({}) // key: order, value: rating
+const showChart = ref(false)
+
+const chartData = computed(() => {
+    if (!chunks.value.length) return {}
+
+
+    const barColors = chunks.value.map(chunk => {
+        const deviation = chunk.deviation;
+        if (deviation < 0) return '#C11007';
+        if (deviation >= 10 && deviation <= 50) return '#53EAFD';
+        return '#2AA63E';
+    });
+
+    return {
+        labels: chunks.value.map(chunk => `#${chunk.order}`),
+        datasets: [
+            {
+                type: 'bar',
+                label: 'Tokens',
+                data: chunks.value.map(chunk => chunk.deviation),
+                backgroundColor: barColors,
+                borderColor: barColors,
+                borderWidth: 1,
+                borderRadius: 1,
+                order: 4,
+            }
+        ]
+    }
+})
+const handleBarClick = (event) => {
+    const { element } = event
+    if (!element) return
+
+    const index = element.index
+    selectedChunk.value = chunks.value[index]
+    showDialog.value = true
+}
+
+const chartOptions = computed(() => {
+    return {
+        indexAxis: 'x',
+        maintainAspectRatio: false,
+        aspectRatio: 0.8,
+        plugins: {
+            legend: {
+                labels: {
+                    usePointStyle: true,
+                    font: {
+                        family: 'Outfit, sans-serif',
+                        weight: '700'
+                    },
+                    color: '#000'
+                }
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                padding: 12,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                titleColor: '#1e293b',
+                bodyColor: '#1e293b',
+                borderColor: '#e2e8f0',
+                borderWidth: 1,
+                bodyFont: {
+                    family: 'Outfit, sans-serif'
+                },
+                titleFont: {
+                    family: 'Outfit, sans-serif',
+                    weight: 'bold'
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    font: {
+                        family: 'Outfit, sans-serif'
+                    }
+                },
+                grid: {
+                    color: '#F1F5F9'
+                }
+            },
+            y: {
+                ticks: {
+                    font: {
+                        family: 'Outfit, sans-serif'
+                    }
+                },
+                grid: {
+                    display: true
+                }
+            }
+        }
+    }
+})
 
 const loadEvaluationData = async () => {
     loading.value = true
@@ -73,7 +171,18 @@ const getMarginLabel = (deviation) => {
     return deviation
 }
 
+const totalEvaluation = computed(() => {
+    let sum = 0;
+    for (const [key, value] of Object.entries(evaluations.value)) {
+        let data_value = value ?? 0;
+        sum += parseInt(data_value);
+    }
+    return sum
+})
+
 const submitEvaluation = () => {
+
+    console.log(evaluations.value)
     // This will be implemented later as requested
     toast.add({
         severity: 'info',
@@ -92,8 +201,43 @@ const submitEvaluation = () => {
                 <Button icon="pi pi-arrow-left" text rounded @click="router.back()" severity="secondary" />
                 <h1 class="m-0 text-3xl font-black">{{ t('valutazione.title') }}</h1>
             </div>
-            <div class="text-primary font-bold">File: {{ documentName }}</div>
+            <div class="flex align-items-center gap-2">
+                <Button icon="pi pi-chart-line" rounded severity="primary"
+                    v-tooltip.bottom="t('valutazione.view_chart')" @click="showChart = true" />
+                <div class="text-primary font-bold">File: {{ documentName }}</div>
+            </div>
         </div>
+
+        <Dialog v-model:visible="showChart" modal :header="t('valutazione.chart_title')"
+            :style="{ width: '95vw', height: '95vh' }" class="chart-dialog p-dialog-content-cust"
+            :contentStyle="{ height: 'calc(100% - 100px)', padding: '0', backgroundColor: '#fff' }">
+            <div class="h-full w-full">
+                <Chart @onDataSelect="handleBarClick" type="bar" :data="chartData" :options="chartOptions"
+                    height="500" />
+            </div>
+            <template #footer>
+                <div
+                    class="flex justify-content-start align-items-center w-full px-5 py-4 bg-gray-50 border-top-1 border-200">
+                    <div class="flex gap-8">
+                        <div class="flex align-items-center gap-3">
+                            <i class="pi pi-stop-fill text-primary" style="font-size: 1.5rem;"></i>
+                            <span class="text-xl font-black">{{ t('valutazione.tokens') }}: {{ stats.total_tokens
+                            }}</span>
+                        </div>
+                        <div class="flex align-items-center gap-3">
+                            <div style="border-top: 4px dashed #EC253F; width: 40px;"></div>
+                            <span class="text-xl font-black">{{ t('valutazione.avg_tokens') }}: {{ stats.avg_tokens
+                            }}</span>
+                        </div>
+                        <div class="flex align-items-center gap-3">
+                            <i class="pi pi-database text-600" style="font-size: 1.5rem;"></i>
+                            <span class="text-xl font-black text-600">{{ t('valutazione.total_chunks') }}: {{
+                                stats.total_chunks }}</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </Dialog>
 
         <div v-if="Object.keys(stats).length > 0" class="flex flex-row align-items-center gap-4 data_general">
             <div class="stat-mini">
@@ -133,8 +277,8 @@ const submitEvaluation = () => {
                     <div class="flex-1">
                         <div class="content-text bg-gray-50 p-4 border-round-lg border-1 border-200 h-full">
                             <code>
-                {{ chunk.content }}
-            </code>
+                        {{ chunk.content }}
+                    </code>
                         </div>
                     </div>
 
@@ -157,7 +301,7 @@ const submitEvaluation = () => {
                         <div class="mt-4 flex flex-column align-items-center">
                             <span v-if="evaluations[chunk.order]" class="text-2xl font-black text-primary">{{
                                 evaluations[chunk.order]
-                            }} <small class="text-400">/ 5</small></span>
+                                }} <small class="text-400">/ 5</small></span>
                         </div>
                     </div>
                 </div>
@@ -168,29 +312,13 @@ const submitEvaluation = () => {
                 class="summary-footer-detached mt-8 p-4 flex justify-content-between align-items-center sticky bottom-2 z-5">
                 <div
                     class="flex align-items-center gap-5 bg-white-transparent p-4 border-round-xl shadow-4 backdrop-blur">
-                    <div class="footer-stat text-center">
-                        <span class="text-500 text-xs font-bold uppercase block mb-1">{{ t('valutazione.rating')
-                        }}</span>
-                        <div class="flex align-items-baseline gap-1 " style="margin-bottom: 6px;">
-                            <span class="text-4xl font-black text-primary ">
-                                {{Object.values(evaluations).filter(v => v !== null).length}}
-                            </span>
-                            <span class="text-600 font-bold">/</span>
-                            <span class="text-500 text-xl">{{ chunks.length }}</span>
-                        </div>
-                    </div>
 
-                    <div v-if="isEvaluationComplete" style="margin-bottom: 15px;"
+                    <div style="margin-bottom: 15px;"
                         class="status-badge mb-4 flex align-items-center bg-green-500 text-white px-4 py-3 border-round-xl shadow-2">
                         <i class="pi pi-check-circle text-2xl mr-2" style="margin-right: 5px;margin-top:2px"></i>
-                        <span class="font-bold text-lg">{{ t('valutazione.evaluation_ready') }}</span>
+                        <span class="font-bold text-lg">{{ t('valutazione.valutation_total') +': '+ totalEvaluation +' p.ti' }}</span>
                     </div>
 
-                    <div v-else style="margin-bottom: 15px;"
-                        class="status-badge mb-4 flex align-items-center bg-gray-200 text-700 px-4 py-3 border-round-xl">
-                        <i class="pi pi-info-circle text-xl mr-2" style="margin-right: 4px;margin-top:2px"></i>
-                        <span class="font-medium">{{ t('valutazione.rating') }} (min. 10)</span>
-                    </div>
                     <div class="flex gap-3">
                         <Button v-if="canSubmit" :label="t('valutazione.submit_evaluation')" icon="pi pi-send"
                             severity="success" raised class="p-submit-btn" @click="submitEvaluation" size="small" />
@@ -367,6 +495,10 @@ code {
 
 .letter-spacing-2 {
     letter-spacing: 0.1em;
+}
+
+.p-dialog-content-cust {
+    background-color: #fff !important;
 }
 
 @media (max-width: 1200px) {
