@@ -2,19 +2,24 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from .model_general import ModelGeneral 
+from database.model.topic import TopicChunks
 
 class Documents(ModelGeneral):
     def __init__(self):
          self.table = "documents"
+         self.topic = TopicChunks()
 
     def insert_file(self, data):
+        topic_id = self.topic.get_by_name(data.get("topic"))
+        if not topic_id:
+            topic_id = self.topic.create(data.get("topic"))
         return self.insert({
             "user_id": data.get("user_id"),
             "name_file": data.get("name_file"),
             "status_file": data.get("status_file", "uploaded"),
             "mime_type": data.get("mime_type"),
             "size": data.get("size"),
-            "topic": data.get("topic")
+            "topic": topic_id
         })
 
     def get_documents_ready_to_process(self):

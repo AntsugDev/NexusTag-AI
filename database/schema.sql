@@ -9,6 +9,21 @@ CREATE TABLE users (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+DROP TABLE IF EXISTS t_topic;
+CREATE TABLE t_topic (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+DROP TABLE IF EXISTS t_strategy_chunk;
+CREATE TABLE t_strategy_chunk (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 DROP  TABLE IF EXISTS documents;
 CREATE TABLE documents (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,10 +32,13 @@ CREATE TABLE documents (
     status_file TEXT NULL,  -- uploaded | processed | error
     mime_type TEXT NULL,
     size INTEGER NULL,
-    topic TEXT NULL,
+    topic INTEGER NULL,
+    strategy_chunk INTEGER NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (topic) REFERENCES t_topic(id) ON DELETE CASCADE,
+    FOREIGN KEY (strategy_chunk) REFERENCES t_strategy_chunk(id) ON DELETE CASCADE
 );
 
 DROP  TABLE IF EXISTS chunks;
