@@ -1,7 +1,7 @@
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
-import Aura from "@primevue/themes/aura";
+import Lara from "@primevue/themes/lara";
 import ConfirmationService from "primevue/confirmationservice";
 import ToastService from "primevue/toastservice";
 import Tooltip from "primevue/tooltip";
@@ -19,10 +19,10 @@ app.use(router);
 app.use(i18n);
 app.use(PrimeVue, {
   theme: {
-    preset: Aura,
+    preset: Lara,
     options: {
       prefix: "p",
-      darkModeSelector: "system",
+      darkModeSelector: false,
       cssLayer: false,
     },
   },

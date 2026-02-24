@@ -20,12 +20,14 @@ const messages = {
       viewError: "Vedi Errore",
       reprocess: "Rielabora",
       evaluate: "Valuta Qualità",
+      switch: 'Cambia in {lang}'
     },
     menu: {
       home: "Home",
       upload: "Carica documento",
       list: "Lista documenti",
       failed: "Job Falliti",
+      logout: "Logout",
     },
     upload: {
       title: "Carica Nuovo Documento",
@@ -56,8 +58,8 @@ const messages = {
       scheduler_waiting_note:
         "File in attesa di elaborazione da parte dello scheduler",
       rework: "Documento riabilitato per l'elaborazione",
-      scheduler_text_waiting: "Attendere l'avvio dello scheduler",
-      scheduler_text_running: "Il processo di scheduler è attivo",
+      scheduler_text_waiting: "Scheduler in attesa",
+      scheduler_text_running: "Scheduler è attivo",
     },
     login: {
       title: "Accedi al Portale",
@@ -135,6 +137,7 @@ const messages = {
       viewError: "View Error",
       reprocess: "Rework",
       evaluate: "Evaluate Quality",
+      switch: 'Change to {lang}'
     },
     login: {
       title: "Portal Access",
@@ -158,6 +161,8 @@ const messages = {
       upload: "Upload Document",
       list: "Document List",
       failed: "Failed Jobs",
+      scheduler: "Scheduler",
+      logout: "Logout",
     },
     upload: {
       title: "Upload New Document",
@@ -187,8 +192,8 @@ const messages = {
       scheduler_running: "Scheduler running...",
       scheduler_waiting_note: "File waiting for processing by the scheduler",
       rework: "Document re-enabled for processing",
-      scheduler_text_waiting: "Waiting for scheduler to run",
-      scheduler_text_running: "Scheduler is running",
+      scheduler_text_waiting: "Scheduler waiting",
+      scheduler_text_running: "Scheduler running",
     },
     chunks: {
       title: "Chunks of {fileName}",

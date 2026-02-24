@@ -1,64 +1,101 @@
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../store/auth'
 import { useSchedulerStore } from '../store/scheduler'
-import Menubar from 'primevue/menubar'
-import Button from 'primevue/button'
+import Dock from 'primevue/dock'
 import { onMounted } from 'vue'
+import { useToast } from "primevue/usetoast";
+import Badge from 'primevue/badge'
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
 const schedulerStore = useSchedulerStore()
 const router = useRouter()
+const route = useRoute()
 
 onMounted(() => {
+    console.log(route)
     schedulerStore.startPolling()
 })
 
 
+
 const items = computed(() => {
-    const baseItems = [
-        {
-            label: t('menu.home'),
-            icon: 'pi pi-home',
-            command: () => router.push({ name: 'Home' })
+    const baseItems = [];
+    const lang = t('common.switch',{lang:locale.value === 'it' ? 'Inglese' : 'Italian'})
+    baseItems.push({
+        label: lang,
+        icon: 'pi pi-globe',
+        action: () => {
+            toggleLanguage()
         }
-    ]
+    })
 
-    if (auth.isAdmin) {
-        baseItems.push({
-            label: t('menu.upload'),
-            icon: 'pi pi-upload',
-            command: () => router.push({ name: 'Upload' })
-        })
-        baseItems.push({
-            label: t('menu.list'),
-            icon: 'pi pi-list',
-            command: () => router.push({ name: 'Admin' })
-        })
-        baseItems.push({
-            label: t('menu.failed'),
-            icon: 'pi pi-exclamation-circle',
-            command: () => router.push({ name: 'FailedJobs' })
-        })
-    } else {
+    baseItems.push({
+        label: t('menu.scheduler'),
+        icon: 'pi pi-clock',
+    })
 
-        baseItems.push({
-            label: t('menu.upload'),
-            icon: 'pi pi-upload',
-            command: () => router.push({ name: 'Upload' })
-        })
-        baseItems.push({
-            label: t('menu.list'),
-            icon: 'pi pi-list',
-            command: () => router.push({ name: 'User' })
-        })
+    baseItems.push({
+        label: t('menu.home'),
+        icon: 'pi pi-home',
+        command: 'Home'
+    })
+    baseItems.push({
+        label: t('menu.upload'),
+        icon: 'pi pi-upload',
+        command: 'Upload'
+    })
+    baseItems.push({
+        label: t('menu.list'),
+        icon: 'pi pi-list',
+        command: 'Admin'
+    })
+    baseItems.push({
+        label: t('menu.failed'),
+        icon: 'pi pi-exclamation-circle',
+        command: 'FailedJobs'
+    })
+    baseItems.push({
+        label: t('menu.logout'),
+        icon: 'pi pi-sign-out',
+        command: null,
+        action: () => {
+            handleLogout()
+        }
+    })
+    const switch_route_name = {
+        'Home': t('menu.home'),
+        'Upload': t('menu.upload'),
+        'Admin': t('menu.list'),
+        'FailedJobs': t('menu.failed'),
     }
 
-    return baseItems
+    const filter = baseItems.filter(item => item.label !== switch_route_name[route.name] ?? null)
+    return filter
 })
+
+const messageComputed = computed(() => {
+    let message = {
+        text: null,
+        severity: 'warn'
+    }
+    if (!schedulerStore.isRunning) {
+        message = {
+            text: t('documents.scheduler_text_waiting'),
+            severity: 'warn'
+        }
+    } else {
+        message = {
+            text: t('documents.scheduler_text_running'),
+            severity: 'success'
+        }
+    }
+    return message
+})
+
 
 const toggleLanguage = () => {
     locale.value = locale.value === 'it' ? 'en' : 'it'
@@ -68,35 +105,23 @@ const handleLogout = () => {
     auth.logout()
     router.push({ name: 'Login' })
 }
+
 </script>
 
 <template>
     <div class="layout-wrapper">
-        <Menubar :model="items" class="layout-menubar glass-panel">
-            <template #start>
-                <div class="logo">
-                    <span class="logo-text">NexusTag <span class="ai-tag">AI</span></span>
-                </div>
-            </template>
-            <template #end>
-                <div class="user-actions">
-                    <div v-if="auth.isAdmin && schedulerStore.info" class="scheduler-badge"
-                        :class="{ 'is-running': schedulerStore.isRunning, 'is-waiting': !schedulerStore.isRunning }"
-                        v-tooltip.bottom="schedulerStore.isRunning ? t('documents.scheduler_running') : t('documents.scheduler_remaining', { time: schedulerStore.formattedRemaining })">
-                        <i v-if="schedulerStore.isRunning" class="pi pi-spin pi-spinner"></i>
-                        <i v-else class="pi pi-clock"></i>
-                        <span class="countdown-text">{{schedulerStore.isRunning ? t('documents.scheduler_text_running') : t('documents.scheduler_text_waiting')}}</span>
-                    </div>
-
-                    <Button :label="locale.toUpperCase()" icon="pi pi-globe" text @click="toggleLanguage"
-                        class="lang-btn" />
-                    <span v-if="auth.user" class="username">{{ auth.user.username }}</span>
-                    <Button :label="t('common.logout')" icon="pi pi-sign-out" severity="danger" text
-                        @click="handleLogout" />
-                </div>
+        <Dock :model="items" position="left" class="dock">
+            <template #itemicon="{ item }">
+                <router-link :to="{ name: item.command }" v-tooltip="item.label" v-if="item.command">
+                    <i :class="item.icon"></i>
+                </router-link>
+                <i :class="item.icon + (item.label === 'Logout' ? ' i-logout' : ' i-globe')" v-tooltip="item.label"
+                    v-else-if="item.action" @click="item.action"></i>
+                <i :class="item.icon + (messageComputed.severity === 'warn' ? ' btn_wait' : ' btn_running')" v-else
+                    v-tooltip="messageComputed.text"></i>
             </template>
 
-        </Menubar>
+        </Dock>
 
         <main class="layout-content">
             <div class="content-container">
@@ -107,6 +132,31 @@ const handleLogout = () => {
 </template>
 
 <style scoped>
+a>button {
+    width: 78%;
+    height: 80%;
+    border-radius: 30px;
+}
+
+.i-logout{
+    color: #C11007!important;
+    cursor: pointer;
+}
+.i-globe{
+    color: #155DFC!important;
+    cursor: pointer;
+}
+
+.btn_wait {
+    background-color: #FE9A37;
+    border-color: #FE9A37;
+}
+
+.btn_running {
+    background-color: #31C950;
+    border-color: #31C950;
+}
+
 .layout-wrapper {
     display: flex;
     flex-direction: column;
@@ -130,7 +180,6 @@ const handleLogout = () => {
 .logo-text {
     font-size: 1.25rem;
     font-weight: 800;
-    color: var(--text-primary);
     letter-spacing: -0.5px;
     white-space: nowrap;
 }
@@ -188,6 +237,12 @@ const handleLogout = () => {
 .layout-content {
     flex: 1;
     padding-bottom: 2rem;
+}
+
+.dock {
+    margin-left: 10px;
+    margin-right: 10px;
+    background-color: #ffffff;
 }
 
 /* Mobile specific overrides */
