@@ -48,7 +48,7 @@ class ModelGeneral():
         s = f"""SELECT * FROM {self.table} WHERE {' AND '.join([f'{key} = ?' for key in data.keys()])}"""
         return self.execute(s, tuple(data.values()), fetch=True)        
     
-    def paginate(self, page=1, limit=10, data=None):
+    def paginate(self, page=1, limit=10, data=None, join_table=None, columns=None):
         """Restituisce record paginati"""
         offset = (page - 1) * limit
         where_clause = ""
@@ -57,7 +57,14 @@ class ModelGeneral():
             where_clause = f" WHERE {' AND '.join([f'{key} = ?' for key in data.keys()])}"
             values = list(data.values())
         
-        s = f"SELECT * FROM {self.table}{where_clause} LIMIT ? OFFSET ?"
+        join_clause = ""
+        if join_table:
+            
+            for join in join_table:
+                join_clause += f" {join['typed']} JOIN {join['table']} ON {join['on']}"
+        
+        s = f"SELECT {','.join(columns) if columns is not None else '*'} FROM {self.table}{join_clause}{where_clause} LIMIT ? OFFSET ?"
+        
         values.extend([limit, offset])
         return self.execute(s, tuple(values), fetch=True)
     

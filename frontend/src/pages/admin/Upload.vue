@@ -11,6 +11,9 @@ import api from '../../api/axios'
 import { useToast } from 'primevue/usetoast'
 import PageBase from '../common/PageBase.vue'
 import { Form } from '@primevue/forms';
+import { yupResolver } from '@primevue/forms/resolvers/yup';
+import * as yup from 'yup';
+import InputForm from '../common/FormField.vue';
 
 const { t } = useI18n()
 const router = useRouter()
@@ -28,6 +31,21 @@ const allowedExtensions = ['.txt', '.log', '.sql', '.csv', '.md', '.pdf', '.doc'
 const onFileSelect = (event) => {
     selectedFile.value = event.files[0]
 }
+
+const schema = yup.object({
+    topic: yup.string().required(t('upload.required', { field: t('upload.topicLabel') })),
+    file_upload: yup.mixed().
+        test(
+            'fileRequired',
+            t('upload.required', { field: t('upload.fileLabel') }),
+            value => {
+                return value && value.length > 0;
+            }
+        )
+    // required(t('upload.required', { field: t('upload.fileLabel') }))
+});
+
+const resolver = yupResolver(schema);
 
 const fetchSuggestions = async (val) => {
     if (val.length < 2) {
@@ -56,37 +74,54 @@ const selectSuggestion = (val) => {
     showSuggestions.value = false
 }
 
-const handleUpload = async (event) => {
-    if (!topic.value) {
-        error.value = t('login.required')
+const onClear = () => {
+    selectedFile.value = null
+    isErrorFile.value.view = false
+    isErrorFile.value.message = null
+}
+
+const isErrorFile = ref({
+    view: false,
+    message: null
+})
+
+const handleUpload = async ({ valid }) => {
+    if (!selectedFile.value) {
+        isErrorFile.value.view = true
+        isErrorFile.value.message = t('upload.required', { field: t('upload.fileLabel') })
         return
     }
-
-    loading.value = true
-    error.value = ''
-
-    const formData = new FormData()
-    formData.append('file', event.files[0])
-    formData.append('argument', topic.value)
-
-    try {
-        await api.post('/api/documents/upload_file', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        })
-        toast.add({
-            severity: 'success',
-            summary: t('common.success'),
-            detail: t('upload.successMsg'),
-            life: 3000
-        })
-        router.push({ name: 'Admin' })
-    } catch (e) {
-        error.value = t('upload.errorMsg')
-    } finally {
-        loading.value = false
+    else {
+        isErrorFile.value.view = false
+        isErrorFile.value.message = null
     }
+
+    if (valid && !isErrorFile.value.view) {
+        error.value = null
+        loading.value = true
+        const formData = new FormData()
+        formData.append('file', selectedFile.value)
+        formData.append('argument', topic.value)
+        try {
+            await api.post('/api/documents/upload_file', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            toast.add({
+                severity: 'success',
+                summary: t('common.success'),
+                detail: t('upload.successMsg'),
+                life: 3000
+            })
+            router.push({ name: 'Admin' })
+        } catch (e) {
+            error.value = t('upload.errorMsg')
+        } finally {
+            loading.value = false
+        }
+    }
+    else return
 }
 </script>
 
@@ -97,24 +132,24 @@ const handleUpload = async (event) => {
             <Form v-slot="$form" :initialValues :resolver @submit="handleUpload"
                 class="flex flex-col gap-4 w-full sm:w-56">
 
+                <InputForm v-model:model="topic" name="topic" class="w-full p-inputtext-lg"
+                    :placeholder="t('upload.topicPlaceholder')" :form="$form" key="topic">
+                    <template #append>
+                        <transition name="fade">
+                            <div v-if="showSuggestions" class="suggestions-panel glass-panel">
+                                <Listbox :options="suggestions" @change="e => selectSuggestion(e.value)"
+                                    class="border-none" />
+                            </div>
+                        </transition>
+                    </template>
+                </InputForm>
+                
                 <div class="form-field">
-                    <InputText v-model="topic" class="w-full p-inputtext-lg"
-                        :placeholder="t('upload.topicPlaceholder')" />
-                    <transition name="fade">
-                        <div v-if="showSuggestions" class="suggestions-panel glass-panel">
-                            <Listbox :options="suggestions" @change="e => selectSuggestion(e.value)"
-                                class="border-none" />
-                        </div>
-                    </transition>
-                </div>
-                <div class="form-field">
-                    <FileUpload mode="basic" name="file" :auto="false" :multiple="false"
-                        :accept="allowedExtensions.join(',')"
-                        :chooseLabel="t('common.search')"
-                        :uploadLabel="t('upload.buttonLabel')" 
-                        :cancelLabel="t('common.back')"
-                         class="custom-fileupload"
-                        :maxFileSize="10000000" :disabled="loading">
+                    <FileUpload mode="basic" customUpload name="file_upload" :auto="false" :multiple="false"
+                        :accept="allowedExtensions.join(',')" :chooseLabel="t('common.search')"
+                        :uploadLabel="t('upload.buttonLabel')" :cancelLabel="t('common.back')" class="custom-fileupload"
+                        :maxFileSize="10000000" :disabled="loading" @select="e => onFileSelect(e)"
+                        @clear="() => onClear()">
                         <template #empty>
                             <div class="flex flex-column align-items-center justify-content-center p-4">
                                 <i class="pi pi-cloud-upload text-4xl mb-3 text-secondary"></i>
@@ -123,15 +158,17 @@ const handleUpload = async (event) => {
                             </div>
                         </template>
                     </FileUpload>
+                    <Message v-if="isErrorFile.view" severity="error" size="small" variant="simple">{{
+                        isErrorFile.message }}</Message>
                 </div>
                 <div class="form-field-button">
-                    <Button type="submit" :label="t('upload.buttonLabel')" severity="info" :loading="loading" />
+                    <Button class="btn-upload" type="submit" :label="t('upload.buttonLabel')" :loading="loading" />
                 </div>
             </Form>
         </template>
     </PageBase>
 
-    
+
 </template>
 
 <style scoped>
@@ -188,18 +225,16 @@ const handleUpload = async (event) => {
     margin-bottom: 2rem;
 }
 
-.w-full {
-    width: 100%;
+
+
+.btn-upload {
+    background-color: var(--p-cyan-700);
+    color: white;
+    border: none;
 }
 </style>
 
 <style>
-.form-field {
-    gap: 1rem;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 10px;
-}
 
 .form-field-button {
     display: flex;

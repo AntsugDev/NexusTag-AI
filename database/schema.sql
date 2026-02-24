@@ -33,12 +33,10 @@ CREATE TABLE documents (
     mime_type TEXT NULL,
     size INTEGER NULL,
     topic INTEGER NULL,
-    strategy_chunk INTEGER NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (topic) REFERENCES t_topic(id) ON DELETE CASCADE,
-    FOREIGN KEY (strategy_chunk) REFERENCES t_strategy_chunk(id) ON DELETE CASCADE
+    FOREIGN KEY (topic) REFERENCES t_topic(id) ON DELETE CASCADE
 );
 
 DROP  TABLE IF EXISTS chunks;
@@ -47,14 +45,16 @@ CREATE TABLE chunks (
     document_id INTEGER NOT NULL,
     content TEXT NOT NULL,
     order_chunk INTEGER NOT NULL,
-    strategy_chunk TEXT NOT NULL,
+    strategy_chunk INTEGER NULL,
     token_count INTEGER  NULL,
     overlap_token INTEGER  NULL,
     metadata JSON NULL, -- Metadati aggiuntivi (pagina, riga, etc.)
     is_convert_embeded BOOLEAN DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
+    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
+    FOREIGN KEY (strategy_chunk) REFERENCES t_strategy_chunk(id) ON DELETE CASCADE
+
 );
 
 -- Tabella Virtuale per sqlite-vec (4096 è la dimensione di Llama3)

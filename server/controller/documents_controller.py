@@ -20,7 +20,13 @@ def documents_controller(documents_router):
             if user.get('username') != 'admin': 
              data = {"user_id": user.get("id")}
 
-            items = doc_model.paginate(page=page, limit=limit, data=data)
+            items = doc_model.paginate(page=page, limit=limit, data=data, join_table=[{
+                'table': 't_topic',
+                'on': 'documents.topic = t_topic.id',
+                'typed': 'inner'
+            },
+            
+            ], columns=["documents.*", "t_topic.name as topic_name", "CASE WHEN EXISTS (SELECT 1 FROM chunks WHERE document_id = documents.id) THEN 1 ELSE 0 END as is_chunked"])
             total = doc_model.count_search(data=data)
             return response(msg="Documents list retrieved", data={
                 "items": [dict(item) for item in items],
@@ -29,6 +35,7 @@ def documents_controller(documents_router):
                 "limit": limit
             })
         except Exception as e:
+            raise e
             raise ExceptionRequest(message=str(e), status_code=422)
 
 

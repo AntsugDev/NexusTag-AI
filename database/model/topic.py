@@ -6,7 +6,7 @@ from utility.utility import ExceptionRequest
 
 class TopicChunks(ModelGeneral):
     def __init__(self):
-        self.table_name = "t_topic"
+        self.table = "t_topic"
         
     def create(self,name:str):
         return self.insert({"name":name}) 

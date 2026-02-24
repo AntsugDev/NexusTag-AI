@@ -164,10 +164,11 @@ const handleLogin = async () => {
     font-size: 2.25rem;
     font-weight: 900;
     letter-spacing: -1px;
+    color: #fff;
 }
 
 .login-header .primary {
-    color: #99A1AF;
+   color: #fff;
 }
 
 .login-header p {

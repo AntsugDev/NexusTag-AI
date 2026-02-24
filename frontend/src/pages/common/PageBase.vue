@@ -1,5 +1,5 @@
 <template>
-    <Card class="page">
+    <Card class="page glass-panel">
         <template #header>
             <div class="title">
                 <h2>{{ title }}</h2>
@@ -54,5 +54,14 @@ const props = defineProps({
     border-bottom: 1px solid #99A1AF;
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
+}
+
+.p-fileupload-basic-content {
+    border: 1px solid #E6E6E6;
+    padding: 10px;
+    border-radius: 7px;
+}
+.p-fileupload-basic-content:hover {
+    border-color: var(--p-green-500)
 }
 </style>
