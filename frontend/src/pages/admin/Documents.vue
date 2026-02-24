@@ -1,17 +1,13 @@
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch , computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Tag from 'primevue/tag'
 import BlockUI from 'primevue/blockui'
 import ProgressBar from 'primevue/progressbar'
-import Dialog from 'primevue/dialog'
 import { useAuthStore } from '../../store/auth'
 import { useSchedulerStore } from '../../store/scheduler'
+import TableComponent from '../common/TableComponent.vue'
+import PageBase from '../common/PageBase.vue'
 
 import api from '../../api/axios'
 import { useToast } from 'primevue/usetoast'
@@ -191,9 +187,33 @@ const formatSize = (bytes) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+const header = computed(() => {
+
+return [
+    { label: t('documents.name'), sortable: true },
+    { label: t('documents.status'), sortable: true },
+    { label: t('documents.size'), sortable: true },
+    { label: t('documents.date'), sortable: true },
+    { label: t('documents.note'), sortable: true },
+    { label: t('common.actions_column'), sortable: false },
+]
+
+})
+
 </script>
 
 <template>
+    <PageBase :title="t('documents.title')">
+        <template #default>
+            <TableComponent :item="documents"
+                :columns="header"
+                :rows="rows" :totalRecords="totalRecords" :loading="loading">
+                <template #content="{ items }">
+
+                </template>
+            </TableComponent>
+        </template>
+    </PageBase>
     <div class="admin-documents">
         <BlockUI :blocked="isProcessing" fullScreen>
             <div v-if="isProcessing" class="processing-overlay">
@@ -206,96 +226,12 @@ const formatSize = (bytes) => {
             </div>
         </BlockUI>
 
-        <div class="page-header">
-            <h1>{{ t('documents.title') }}</h1>
-            <p>{{ t('documents.subtitle') }}</p>
-        </div>
 
 
-        <DataTable v-model:filters="filters" :value="documents" lazy paginator :rows="rows" :totalRecords="totalRecords"
-            :loading="loading" @page="onPage($event)" class="glass-panel main-table" filterDisplay="menu"
-            :globalFilterFields="['name_file', 'topic']" responsiveLayout="stack" breakpoint="960px">
-            <template #header>
-                <div class="table-header">
-                    <span class="p-icon-field search-input">
-                        <i class="pi pi-search p-input-icon" />
-                        <InputText v-model="filters['global'].value" :placeholder="t('common.search')" />
-                    </span>
-                    <Button icon="pi pi-refresh" rounded raised @click="loadLazyData()"
-                        v-tooltip.top="t('common.refresh')" />
-                </div>
-            </template>
 
-            <Column field="id" header="ID" sortable class="id-column"></Column>
-            <Column field="name_file" :header="t('documents.name')" sortable filter>
-                <template #body="{ data }">
-                    <span class="font-bold file-name">{{ data.name_file }}</span>
-                </template>
-            </Column>
-            <Column field="topic" :header="t('upload.topicLabel')" sortable></Column>
-            <Column field="status_file" :header="t('documents.status')" sortable filter>
-                <template #body="{ data }">
-                    <div class="flex flex-column gap-1">
-                        <Tag :value="t(`documents.status_${data.status_file}`)"
-                            :severity="getStatusSeverity(data.status_file)" class="status-tag" />
-                    </div>
-                </template>
-            </Column>
-            <Column field="size" :header="t('documents.size')" class="hide-mobile">
-                <template #body="{ data }">
-                    {{ formatSize(data.size) }}
-                </template>
-            </Column>
-            <Column field="created_at" :header="t('documents.date')" sortable class="hide-mobile">
-                <template #body="{ data }">
-                    {{ new Date(data.created_at).toLocaleString() }}
-                </template>
-            </Column>
-            <Column field="note" :header="t('documents.note')" class="hide-mobile">
-                <template #body="{ data }">
-                    <small v-if="data.status_file === 'uploaded' || data.status_file === 'reprocessed'"
-                        class="text-secondary italic line-height-1">
-                        {{ t('documents.scheduler_waiting_note') }}
-                    </small>
-                </template>
-            </Column>
-            <Column :header="t('common.actions')" class="actions-column">
-                <template #body="{ data }">
-                    <div class="flex justify-content-center gap-2">
-                        <Button v-if="data.status_file === 'processed'" icon="pi pi-list" severity="info" text raised
-                            rounded @click="viewChunks(data)" v-tooltip.top="t('common.viewChunks')" />
 
-                        <Button v-if="data.status_file === 'processed'" icon="pi pi-star" severity="help" text raised
-                            rounded @click="viewEvaluation(data)" v-tooltip.top="t('common.evaluate')" />
 
-                        <Button v-if="data.status_file === 'pending'" icon="pi pi-spin pi-spinner" severity="warning"
-                            text raised rounded disabled v-tooltip.top="t('documents.status_pending')" />
 
-                        <Button v-if="data.status_file === 'error'" icon="pi pi-exclamation-triangle" severity="warning"
-                            text raised rounded @click="viewError(data.id)" v-tooltip.top="t('common.viewError')" />
-
-                        <Button v-if="data.status_file === 'processed'" icon="pi pi-sync" severity="danger" text raised
-                            rounded @click="reprocessDocument(data.id)" v-tooltip.top="t('common.reprocess')" />
-                    </div>
-                </template>
-            </Column>
-
-            <template #empty> {{ t('common.noData') }} </template>
-        </DataTable>
-
-        <Dialog v-model:visible="showErrorDialog" modal :header="t('errorDialog.title')" :style="{ width: '50vw' }"
-            :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
-            <div class="error-detail-content">
-                <i class="pi pi-times-circle text-danger text-4xl mb-3"></i>
-                <p class="mb-4">{{ t('errorDialog.message') }}</p>
-                <div class="error-msg-box glass-panel p-4 text-left font-mono">
-                    {{ errorMessage }}
-                </div>
-            </div>
-            <template #footer>
-                <Button label="OK" icon="pi pi-check" @click="showErrorDialog = false" autofocus />
-            </template>
-        </Dialog>
     </div>
 </template>
 

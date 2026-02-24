@@ -20,7 +20,9 @@ const messages = {
       viewError: "Vedi Errore",
       reprocess: "Rielabora",
       evaluate: "Valuta Qualità",
-      switch: 'Cambia in {lang}'
+      switch: 'Cambia in {lang}',
+      actions_column: 'Azioni',
+      table_empty: 'Nessun dato trovato'
     },
     menu: {
       home: "Home",
@@ -137,7 +139,10 @@ const messages = {
       viewError: "View Error",
       reprocess: "Rework",
       evaluate: "Evaluate Quality",
-      switch: 'Change to {lang}'
+      switch: 'Change to {lang}',
+      actions_column: 'Actions',
+      table_empty: 'No data found'
+
     },
     login: {
       title: "Portal Access",

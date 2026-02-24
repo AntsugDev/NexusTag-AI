@@ -9,6 +9,8 @@ import Message from 'primevue/message'
 import Listbox from 'primevue/listbox'
 import api from '../../api/axios'
 import { useToast } from 'primevue/usetoast'
+import PageBase from '../common/PageBase.vue'
+import { Form } from '@primevue/forms';
 
 const { t } = useI18n()
 const router = useRouter()
@@ -89,17 +91,13 @@ const handleUpload = async (event) => {
 </script>
 
 <template>
-    <div class="admin-upload">
-        <div class="page-header">
-            <h1>{{ t('upload.title') }}</h1>
-            <p>{{ t('upload.subtitle') }}</p>
-        </div>
 
-        <div class="upload-container glass-panel">
-            <!-- Topic Selection -->
-            <div class="field mb-6">
-                <label class="block font-bold mb-3">{{ t('upload.topicLabel') }} *</label>
-                <div class="topic-input-wrapper">
+    <PageBase :title="t('upload.title')">
+        <template #default>
+            <Form v-slot="$form" :initialValues :resolver @submit="handleUpload"
+                class="flex flex-col gap-4 w-full sm:w-56">
+
+                <div class="form-field">
                     <InputText v-model="topic" class="w-full p-inputtext-lg"
                         :placeholder="t('upload.topicPlaceholder')" />
                     <transition name="fade">
@@ -109,34 +107,31 @@ const handleUpload = async (event) => {
                         </div>
                     </transition>
                 </div>
-                <transition name="fade">
-                    <small v-if="suggestions.length > 0" class="text-secondary mt-2 block italic">
-                        {{ t('upload.topicHint') }}
-                    </small>
-                </transition>
-            </div>
+                <div class="form-field">
+                    <FileUpload mode="basic" name="file" :auto="false" :multiple="false"
+                        :accept="allowedExtensions.join(',')"
+                        :chooseLabel="t('common.search')"
+                        :uploadLabel="t('upload.buttonLabel')" 
+                        :cancelLabel="t('common.back')"
+                         class="custom-fileupload"
+                        :maxFileSize="10000000" :disabled="loading">
+                        <template #empty>
+                            <div class="flex flex-column align-items-center justify-content-center p-4">
+                                <i class="pi pi-cloud-upload text-4xl mb-3 text-secondary"></i>
+                                <p class="text-secondary">{{ t('upload.subtitle') }}</p>
+                                <small class="text-secondary opacity-60">Max 10MB</small>
+                            </div>
+                        </template>
+                    </FileUpload>
+                </div>
+                <div class="form-field-button">
+                    <Button type="submit" :label="t('upload.buttonLabel')" severity="info" :loading="loading" />
+                </div>
+            </Form>
+        </template>
+    </PageBase>
 
-            <div class="field mb-5">
-                <label class="block font-bold mb-3">File *</label>
-                <FileUpload mode="advanced" name="file" :auto="false" :multiple="false"
-                    :accept="allowedExtensions.join(',')" :maxFileSize="10000000" :chooseLabel="t('common.search')"
-                    :uploadLabel="t('upload.buttonLabel')" :cancelLabel="t('common.back')" class="custom-fileupload"
-                    @uploader="handleUpload" :customUpload="true" :disabled="loading">
-                    <template #empty>
-                        <div class="flex flex-column align-items-center justify-content-center p-4">
-                            <i class="pi pi-cloud-upload text-4xl mb-3 text-secondary"></i>
-                            <p class="text-secondary">{{ t('upload.subtitle') }}</p>
-                            <small class="text-secondary opacity-60">Max 10MB</small>
-                        </div>
-                    </template>
-                </FileUpload>
-            </div>
-
-            <transition name="fade">
-                <Message v-if="error" severity="error" class="mt-4">{{ error }}</Message>
-            </transition>
-        </div>
-    </div>
+    
 </template>
 
 <style scoped>
@@ -195,5 +190,23 @@ const handleUpload = async (event) => {
 
 .w-full {
     width: 100%;
+}
+</style>
+
+<style>
+.form-field {
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.form-field-button {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
 }
 </style>

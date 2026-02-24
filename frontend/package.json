@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@primevue/forms": "^4.5.4",
     "@primevue/themes": "^4.5.4",
     "axios": "^1.13.5",
     "chart.js": "^4.5.1",
