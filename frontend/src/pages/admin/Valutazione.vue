@@ -9,7 +9,8 @@ import TableComponent from '../common/TableComponent.vue'
 import Editor from 'primevue/editor';
 import Badge from 'primevue/badge';
 import Knob from 'primevue/knob';
-
+import DialogCommon from '../common/DialogCommon.vue';
+import Chart from 'primevue/chart';
 
 
 const { t } = useI18n()
@@ -53,12 +54,7 @@ const chartData = computed(() => {
     }
 })
 const handleBarClick = (event) => {
-    const { element } = event
-    if (!element) return
-
-    const index = element.index
-    selectedChunk.value = chunks.value[index]
-    showDialog.value = true
+    showChart.value = true
 }
 
 
@@ -199,6 +195,14 @@ const submitEvaluation = () => {
     <PageBase :title="t('valutazione.title', { fileName: documentName || `Document #${documentId}` })"
         :backRoute="documentId ? { name: t('documents.title'), to: 'Admin' } : null">
 
+        <pre style="color: red;">showChart{{ showChart }}</pre>
+        <DialogCommon :header="t('valutazione.chart_title')" v-model:visible="showChart">
+            <template #default>
+                cazzo
+                <Chart type="bar" :data="chartData" :options="chartOptions" class="w-full h-full" />
+            </template>
+
+        </DialogCommon>
         <Fieldset class="fieldset">
             <div class="stat-mini">
                 <span class="label">{{ t('valutazione.total_chunks') }}</span>
@@ -215,24 +219,7 @@ const submitEvaluation = () => {
         </Fieldset>
 
 
-        <!-- <TableComponent :isRefresh="false" :items="stats" :columns="[
-            {
-                field: 'total_chunks',
-                label: t('valutazione.total_chunks'),
-                sortable: false
-            },
-            {
-                field: 'avg_tokens',
-                label: t('valutazione.avg_tokens'),
-                sortable: false
-            },
-            {
-                field: 'total_tokens',
-                label: t('valutazione.total_tokens'),
-                sortable: false
-            }
-        ]">
-        </TableComponent> -->
+
 
 
         <TableComponent @refresh="loadEvaluationData" :setAllRow="true" :items="chunks" :columns="[
@@ -264,7 +251,7 @@ const submitEvaluation = () => {
         ]">
             <template #others>
                 <i class="pi pi-chart-bar" style="font-size: 1rem;cursor: pointer;"
-                    v-tooltip.bottom="t('valutazione.view_chart')" @click="showChart = true"></i>
+                    v-tooltip.bottom="t('valutazione.view_chart')" @click="handleBarClick"></i>
             </template>
             <template #content_content="{ item }">
                 <Editor :modelValue="item.content" :readonly="true">
@@ -288,37 +275,6 @@ const submitEvaluation = () => {
                     style="width: 60%;background-color: #fff;padding: 5px;border-radius: 10px;align-content: center;" />
             </template>
         </TableComponent>
-
-        <Dialog v-model:visible="showChart" modal :header="t('valutazione.chart_title')"
-            :style="{ width: '95vw', height: '95vh' }" class="chart-dialog p-dialog-content-cust"
-            :contentStyle="{ height: 'calc(100% - 100px)', padding: '0', backgroundColor: '#fff' }">
-            <div class="h-full w-full">
-                <Chart @onDataSelect="handleBarClick" type="bar" :data="chartData" :options="chartOptions"
-                    height="500" />
-            </div>
-            <template #footer>
-                <div
-                    class="flex justify-content-start align-items-center w-full px-5 py-4 bg-gray-50 border-top-1 border-200">
-                    <div class="flex gap-8">
-                        <div class="flex align-items-center gap-3">
-                            <i class="pi pi-stop-fill text-primary" style="font-size: 1.5rem;"></i>
-                            <span class="text-xl font-black">{{ t('valutazione.tokens') }}: {{ stats.total_tokens
-                                }}</span>
-                        </div>
-                        <div class="flex align-items-center gap-3">
-                            <div style="border-top: 4px dashed #EC253F; width: 40px;"></div>
-                            <span class="text-xl font-black">{{ t('valutazione.avg_tokens') }}: {{ stats.avg_tokens
-                                }}</span>
-                        </div>
-                        <div class="flex align-items-center gap-3">
-                            <i class="pi pi-database text-600" style="font-size: 1.5rem;"></i>
-                            <span class="text-xl font-black text-600">{{ t('valutazione.total_chunks') }}: {{
-                                stats.total_chunks }}</span>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </Dialog>
 
     </PageBase>
 
