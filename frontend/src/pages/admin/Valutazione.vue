@@ -2,16 +2,15 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import Rating from 'primevue/rating'
-import Tag from 'primevue/tag'
-import Fieldset from 'primevue/fieldset'
-import Chart from 'primevue/chart'
-import Dialog from 'primevue/dialog'
 import api from '../../api/axios'
 import { useToast } from 'primevue/usetoast'
+import PageBase from '../common/PageBase.vue'
+import TableComponent from '../common/TableComponent.vue'
+import Editor from 'primevue/editor';
+import Badge from 'primevue/badge';
+import Knob from 'primevue/knob';
+
+
 
 const { t } = useI18n()
 const route = useRoute()
@@ -61,6 +60,7 @@ const handleBarClick = (event) => {
     selectedChunk.value = chunks.value[index]
     showDialog.value = true
 }
+
 
 const chartOptions = computed(() => {
     return {
@@ -131,7 +131,7 @@ const loadEvaluationData = async () => {
 
         // Initialize evaluations
         chunks.value.forEach(chunk => {
-            evaluations.value[chunk.order] = null
+            evaluations.value[chunk.order] = 0
         })
     } catch (error) {
         console.error('Error fetching evaluation data:', error)
@@ -160,10 +160,11 @@ const canSubmit = computed(() => {
 })
 
 const getMarginSeverity = (deviation) => {
-    const absDev = Math.abs(deviation)
-    if (absDev < 50) return 'success'
-    if (absDev < 150) return 'warning'
-    return 'danger'
+    const absDev = parseInt(deviation)
+    if (absDev < 0) return 'danger'
+    else if (absDev > 0 && absDev < 50) return 'success'
+    else if (absDev > 50) return 'warning'
+    return 'info'
 }
 
 const getMarginLabel = (deviation) => {
@@ -195,18 +196,98 @@ const submitEvaluation = () => {
 </script>
 
 <template>
-    <div class="admin-valutazione">
-        <div class="page-header glass-panel p-4 flex justify-content-between align-items-center mb-5">
-            <div class="flex align-items-center gap-4">
-                <Button icon="pi pi-arrow-left" text rounded @click="router.back()" severity="secondary" />
-                <h1 class="m-0 text-3xl font-black">{{ t('valutazione.title') }}</h1>
+    <PageBase :title="t('valutazione.title', { fileName: documentName || `Document #${documentId}` })"
+        :backRoute="documentId ? { name: t('documents.title'), to: 'Admin' } : null">
+
+        <Fieldset class="fieldset">
+            <div class="stat-mini">
+                <span class="label">{{ t('valutazione.total_chunks') }}</span>
+                <span class="value">{{ stats.total_chunks }}</span>
             </div>
-            <div class="flex align-items-center gap-2">
-                <Button icon="pi pi-chart-line" rounded severity="primary"
-                    v-tooltip.bottom="t('valutazione.view_chart')" @click="showChart = true" />
-                <div class="text-primary font-bold">File: {{ documentName }}</div>
+            <div class="stat-mini">
+                <span class="label">{{ t('valutazione.avg_tokens') }}</span>
+                <span class="value">{{ stats.avg_tokens }}</span>
             </div>
-        </div>
+            <div class="stat-mini">
+                <span class="label">{{ t('valutazione.total_tokens') }}</span>
+                <span class="value">{{ stats.total_tokens }}</span>
+            </div>
+        </Fieldset>
+
+
+        <!-- <TableComponent :isRefresh="false" :items="stats" :columns="[
+            {
+                field: 'total_chunks',
+                label: t('valutazione.total_chunks'),
+                sortable: false
+            },
+            {
+                field: 'avg_tokens',
+                label: t('valutazione.avg_tokens'),
+                sortable: false
+            },
+            {
+                field: 'total_tokens',
+                label: t('valutazione.total_tokens'),
+                sortable: false
+            }
+        ]">
+        </TableComponent> -->
+
+
+        <TableComponent @refresh="loadEvaluationData" :setAllRow="true" :items="chunks" :columns="[
+            {
+                field: 'order',
+                label: t('chunks.order'),
+                sortable: true
+            },
+            {
+                field: 'content',
+                label: t('chunks.content'),
+                sortable: true
+            },
+            {
+                field: 'deviation',
+                label: t('valutazione.deviation'),
+                sortable: true
+            },
+            {
+                field: 'token_count',
+                label: t('chunks.tokens'),
+                sortable: true
+            },
+            {
+                field: 'rating',
+                label: t('valutazione.rating'),
+                sortable: true
+            }
+        ]">
+            <template #others>
+                <i class="pi pi-chart-bar" style="font-size: 1rem;cursor: pointer;"
+                    v-tooltip.bottom="t('valutazione.view_chart')" @click="showChart = true"></i>
+            </template>
+            <template #content_content="{ item }">
+                <Editor :modelValue="item.content" :readonly="true">
+                    <template v-slot:toolbar>
+                        <span class="ql-formats">
+                        </span>
+                    </template>
+
+                </Editor>
+            </template>
+            <template #content_deviation="{ item }">
+                <Badge :value="item.deviation" :severity="getMarginSeverity(item.deviation)"></Badge>
+            </template>
+            <template #content_token_count="{ item }">
+                {{ item.token_count }}
+            </template>
+            <template #content_rating="{ item }">
+                <Knob v-model="evaluations[item.order]" :min="0" :max="5" :step="1" :showValue="true"
+                    valueTemplate="{value}" :readonly="false" :disabled="false" :size="50" :strokeWidth="6"
+                    :ptOptions="{ mergeProps: true }"
+                    style="width: 60%;background-color: #fff;padding: 5px;border-radius: 10px;align-content: center;" />
+            </template>
+        </TableComponent>
 
         <Dialog v-model:visible="showChart" modal :header="t('valutazione.chart_title')"
             :style="{ width: '95vw', height: '95vh' }" class="chart-dialog p-dialog-content-cust"
@@ -222,12 +303,12 @@ const submitEvaluation = () => {
                         <div class="flex align-items-center gap-3">
                             <i class="pi pi-stop-fill text-primary" style="font-size: 1.5rem;"></i>
                             <span class="text-xl font-black">{{ t('valutazione.tokens') }}: {{ stats.total_tokens
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="flex align-items-center gap-3">
                             <div style="border-top: 4px dashed #EC253F; width: 40px;"></div>
                             <span class="text-xl font-black">{{ t('valutazione.avg_tokens') }}: {{ stats.avg_tokens
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="flex align-items-center gap-3">
                             <i class="pi pi-database text-600" style="font-size: 1.5rem;"></i>
@@ -239,99 +320,23 @@ const submitEvaluation = () => {
             </template>
         </Dialog>
 
-        <div v-if="Object.keys(stats).length > 0" class="flex flex-row align-items-center gap-4 data_general">
-            <div class="stat-mini">
-                <span class="label">{{ t('valutazione.total_chunks') }}</span>
-                <span class="value">{{ stats.total_chunks }}</span>
-            </div>
-            <div class="stat-mini">
-                <span class="label">{{ t('valutazione.avg_tokens') }}</span>
-                <span class="value">{{ stats.avg_tokens }}</span>
-            </div>
-            <div class="stat-mini">
-                <span class="label">{{ t('valutazione.total_tokens') }}</span>
-                <span class="value">{{ stats.total_tokens }}</span>
-            </div>
-        </div>
+    </PageBase>
 
-        <div v-if="loading" class="flex justify-content-center p-8">
-            <i class="pi pi-spin pi-spinner text-5xl text-primary"></i>
-        </div>
-
-        <div v-else class="evaluation-container pb-8">
-            <Fieldset v-for="chunk in chunks" :key="chunk.order"
-                class="evaluation-fieldset bg-white mb-6 shadow-2 border-2 border-200">
-                <template #legend>
-                    <div class="flex align-items-center gap-3 px-2">
-                        <span class="order-badge">#{{ chunk.order }}</span>
-                        <Tag :value="t('valutazione.tokens') + ': ' + chunk.token_count" severity="contrast" rounded
-                            class="px-3 tag_token" />
-                        <Tag :value="t('valutazione.deviation') + ': ' + getMarginLabel(chunk.deviation)"
-                            :severity="chunk.deviation < 0 ? 'contrast' : getMarginSeverity(chunk.deviation)" rounded
-                            :class="chunk.deviation < 0 ? ' px-3 tag_token_dev_red' : 'px-3 tag_token_dev_succ'" />
-                    </div>
-                </template>
-
-                <div class="card-row flex gap-4 align-items-stretch">
-                    <!-- Text Area (Full width) -->
-                    <div class="flex-1">
-                        <div class="content-text bg-gray-50 p-4 border-round-lg border-1 border-200 h-full">
-                            <code>
-                        {{ chunk.content }}
-                    </code>
-                        </div>
-                    </div>
-
-                    <!-- Evaluation Sidebar -->
-                    <div
-                        class="evaluation-sidebar flex flex-column align-items-center justify-content-center p-4 border-left-1 border-200 min-w-max bg-gray-50 border-round-right-lg">
-                        <span class="text-xs font-bold text-500 mb-3 uppercase letter-spacing-2">{{
-                            t('valutazione.rating') }}</span>
-                        <div
-                            class="rating-box p-3 border-round-xl bg-white border-2 border-200 shadow-1 hover:border-primary transition-colors">
-                            <Rating v-model="evaluations[chunk.order]" :stars="5" :cancel="false">
-                                <template #onicon>
-                                    <i class="pi pi-star-fill text-yellow-500 text-3xl" />
-                                </template>
-                                <template #officon>
-                                    <i class="pi pi-star text-300 text-3xl" />
-                                </template>
-                            </Rating>
-                        </div>
-                        <div class="mt-4 flex flex-column align-items-center">
-                            <span v-if="evaluations[chunk.order]" class="text-2xl font-black text-primary">{{
-                                evaluations[chunk.order]
-                                }} <small class="text-400">/ 5</small></span>
-                        </div>
-                    </div>
-                </div>
-            </Fieldset>
-
-            <!-- Detached Footer Summary (No background/border as requested) -->
-            <div
-                class="summary-footer-detached mt-8 p-4 flex justify-content-between align-items-center sticky bottom-2 z-5">
-                <div
-                    class="flex align-items-center gap-5 bg-white-transparent p-4 border-round-xl shadow-4 backdrop-blur">
-
-                    <div style="margin-bottom: 15px;"
-                        class="status-badge mb-4 flex align-items-center bg-green-500 text-white px-4 py-3 border-round-xl shadow-2">
-                        <i class="pi pi-check-circle text-2xl mr-2" style="margin-right: 5px;margin-top:2px"></i>
-                        <span class="font-bold text-lg">{{ t('valutazione.valutation_total') +': '+ totalEvaluation +' p.ti' }}</span>
-                    </div>
-
-                    <div class="flex gap-3">
-                        <Button v-if="canSubmit" :label="t('valutazione.submit_evaluation')" icon="pi pi-send"
-                            severity="success" raised class="p-submit-btn" @click="submitEvaluation" size="small" />
-                    </div>
-                </div>
-
-
-            </div>
-        </div>
-    </div>
 </template>
 
 <style scoped>
+.fieldset {
+    border: 1px solid #99A1AF;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: #eee;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: space-between;
+}
+
 .data_general {
     flex-direction: row;
     justify-content: space-between;

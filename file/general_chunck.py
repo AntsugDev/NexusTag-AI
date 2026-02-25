@@ -7,6 +7,7 @@ from database.model.chunks_table import ChunkTable
 from database.model.jobs_failed import JobsFailed
 from dotenv import load_dotenv
 from database.model.emebed_model import EmbedModel
+from database.model.strategy import StrategyChunk
 
 load_dotenv()
 
@@ -91,12 +92,13 @@ class GeneralChunck(ABC):
         raise e 
     
     def strategy_chunk(self):
+        s = StrategyChunk()
         match self.type_file:
             case "txt" |"log"|"md"|"sql":
-                return os.getenv("STRATEGY_CHUNK_TESTUALE")
+                return s._get_id(str(os.getenv("STRATEGY_CHUNK_TESTUALE")))
             case "csv"|"xls"|"xlsx":
-                return os.getenv("STRATEGY_CHUNK_ROW")
+                return s._get_id(str(os.getenv("STRATEGY_CHUNK_ROW")))
             case "pdf"|"doc"|"docx"|"docs":
-                return os.getenv("STRATEGY_CHUNK_DOC")
+                return s._get_id(str(os.getenv("STRATEGY_CHUNK_DOC")))
             case _:
-                return os.getenv("STRATEGY_CHUNK_GENERICO")   
+                return s._get_id(str(os.getenv("STRATEGY_CHUNK_GENERICO")))   

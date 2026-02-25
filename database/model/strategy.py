@@ -26,6 +26,15 @@ class StrategyChunk(ModelGeneral):
     def delete(self,id:int):
         return self.delete(id)    
 
+    def _get_id(self,name:str):
+        try:
+            response =  self.search({"name":name})
+            if response:
+                return dict(response[0]).get('id')
+            else:
+                raise ExceptionRequest(message=f"Strategy not found", status_code=404)
+        except Exception as e:
+            raise ExceptionRequest(message=f"Errore durante il recupero dell'id: {e}", status_code=409)
     def basic_data(self):
         try:
             data =[

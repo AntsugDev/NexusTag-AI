@@ -6,12 +6,13 @@
             <Skeleton width="75%"></Skeleton>
         </div>
     </template>
-    <DataTable :value="items" paginator :rows="rows" :rowsPerPageOptions="[5, 10, 20, 50]" :sortOrder="sortOrder"
+    <DataTable :value="items" paginator :rows="setRows" :rowsPerPageOptions="optionsRows" :sortOrder="sortOrder"
         :sortField="sortField" layout="list" :totalRecords="totalRecords" :loading="loading" filterDisplay="row"
-        :globalFilterFields="globalFilterFields"
-        >
+        :globalFilterFields="globalFilterFields">
         <template #header>
-            <IconsTable style="justify-content: end;" :icons="[
+            <div class="content-header">
+            <slot name="others"></slot>
+            <IconsTable v-if="isRefresh" style="justify-content: end;" :icons="[
                 {
                     class: 'pi pi-refresh',
                     action: () => {
@@ -21,7 +22,8 @@
                     tooltip: 'Reload'
                 }
             ]"></IconsTable>
-
+            <span v-else></span>
+</div>
         </template>
         <Column v-for="column, index in columns" :key="index" :header="column.label" :field="column.field"
             :sortable="column.sortable">
@@ -48,7 +50,7 @@ import DataView from 'primevue/dataview';
 import Row from 'primevue/row';
 import Column from 'primevue/column';
 import Skeleton from 'primevue/skeleton';
-import { defineComponent, useSlots } from 'vue';
+import { computed, defineComponent, useSlots } from 'vue';
 import { useI18n } from 'vue-i18n'
 import DataTable from 'primevue/datatable';
 import IconsTable from './IconsTable.vue';
@@ -116,11 +118,46 @@ const props = defineProps({
         Array,
         required: false,
         default: []
+    },
+    isRefresh: {
+        Boolean,
+        required: false,
+        default: true
+    },
+    setAllRow: {
+        Boolean,
+        required: false,
+        default: false
     }
+})
+
+const optionsRows = computed(() => {
+    let options = [5, 10, 20, 50]
+    if (props.setAllRow) {
+        options.push(props.items.length)
+        options = options.filter(e => e <= props.items.length)
+    }
+
+    return options
+})
+
+const setRows = computed(() => {
+    if (props.setAllRow)
+        return props.items.length
+    else return props.rows
+
 })
 
 </script>
 <style lang="css" scoped>
+.content-header {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    justify-content: space-between;
+    align-content: center;
+}
+
 .div-list {
     display: flex;
     flex-direction: column;

@@ -97,7 +97,15 @@ def documents_controller(documents_router):
         try:
             from database.model.chunks_table import ChunkTable
             chunk_model = ChunkTable()
-            items = chunk_model.paginate(page=page, limit=limit, data={"document_id": id})
+            items = chunk_model.paginate(page=page, limit=limit, data={"document_id": id},
+            join_table=[
+                {
+                    'table': 't_strategy_chunk',
+                    'on': 'chunks.strategy_chunk = t_strategy_chunk.id',
+                    'typed': 'left'
+                }
+            ], columns=["chunks.*", "t_strategy_chunk.name as strategy_chunk_name"]
+            )
             total = chunk_model.count_search(data={"document_id": id})
             return response(msg="Chunks retrieved", data={
                 "items": [dict(item) for item in items],

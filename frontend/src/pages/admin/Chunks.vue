@@ -2,10 +2,6 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
 import Tag from 'primevue/tag'
 import { useAuthStore } from '../../store/auth'
 import PageBase from '../common/PageBase.vue'
@@ -69,38 +65,48 @@ const goBack = () => {
     <PageBase :title="t('chunks.title', { fileName: fileName || `Document #${documentId}` })"
         :backRoute="documentId ? { name: t('documents.title'), to: 'Admin' } : null">
 
-        <TableComponent :items="documechunksnts" :columns="[
+        <TableComponent :items="chunks" :columns="[
             {
                 field: 'order_chunk',
-                header: t('chunks.order'),
-                class: 'order-column'
+                label: t('chunks.order'),
+                sortable: true
             },
             {
                 field: 'content',
-                header: t('chunks.content'),
-                class: 'chunk-content'
+                label: t('chunks.content'),
+                sortable: true
             },
             {
                 field: 'token_count',
-                header: t('chunks.tokens'),
-                class: 'hide-mobile'
+                label: t('chunks.tokens'),
+                sortable: true
             },
             {
-                field: 'strategy_chunk',
-                header: t('chunks.strategy'),
-                class: 'hide-mobile'
+                field: 'strategy_chunk_name',
+                label: t('chunks.strategy'),
+                sortable: false
             },
             {
                 field: 'is_convert_embeded',
-                header: t('chunks.embedded'),
-                class: 'hide-mobile'
+                label: t('chunks.embedded'),
+                sortable: true
             }
-        ]" :rows="rows" :totalRecords="totalRecords" @refresh="loadLazyData">
+        ]" @refresh="loadLazyData" :rows="rows" :totalRecords="totalRecords">
             <template #content_content="{ item }">
-                <Editor :modelValue="item.content" :readOnly="true"></Editor>
+                <Editor :modelValue="item.content" :readonly="true">
+                    <template v-slot:toolbar>
+                        <span class="ql-formats">
+                        </span>
+                    </template>
+
+                </Editor>
             </template>
-            <template #is_convert_embeded_content="{ item }">
-                <Tag :value="item.is_convert_embeded ? t('common.si') : t('common.no')" :severity="item.is_convert_embeded ? 'success' : 'danger'"></Tag>
+            <template #content_order_chunk="{ item }">
+                <strong>{{ parseInt(item.order_chunk) + 1 ?? item.order_chunk }}</strong>
+            </template>
+            <template #content_is_convert_embeded="{ item }">
+                <Tag :value="item.is_convert_embeded !== 0 ? t('common.si') : t('common.no')"
+                    :severity="item.is_convert_embeded !== 0 ? 'success' : 'danger'"></Tag>
             </template>
 
         </TableComponent>

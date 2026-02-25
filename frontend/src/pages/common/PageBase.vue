@@ -2,7 +2,7 @@
     <Card class="page glass-panel">
         <template #header>
             <div class="title">
-                <i class="pi pi-arrow-left cursor-pointer mr-2" @click="back" :alt="computedBackRoute"
+                <i class="pi pi-arrow-left" style="color: #fff;margin-right: 20px;cursor: pointer;" @click="back" :alt="computedBackRoute"
                     :title="computedBackRoute" v-if="backRoute?.to"></i>
                 <h2>{{ title }}</h2>
             </div>

@@ -29,10 +29,10 @@ class ChunkTable(ModelGeneral):
         return self.execute(s, (document_id,))
 
         
-    def get_chunks_by_document_id(self, document_id):
+    def get_chunks_by_document_id(self, document_id, join_table=None, columns=None):
         s = self.search({
             "document_id": document_id
-        })
+        }, join_table, columns)
         return s
 
     def get_data_for_column(self,id, column = ['id', 'content','token_count']):

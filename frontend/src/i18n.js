@@ -113,7 +113,7 @@ const messages = {
       meta: "Metadati",
     },
     valutazione: {
-      title: "Valutazione Chunk",
+      title: "Valutazione Chunk per il documento {fileName}",
       subtitle: "Analisi qualitativa e quantitativa dei segmenti estratti.",
       content: "Contenuto",
       tokens: "Token",
@@ -241,7 +241,7 @@ const messages = {
       meta: "Metadata",
     },
     valutazione: {
-      title: "Chunk Evaluation",
+      title: "Chunk Evaluation for document {fileName}",
       subtitle: "Qualitative and quantitative analysis of extracted segments.",
       content: "Content",
       tokens: "Tokens",

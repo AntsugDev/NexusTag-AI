@@ -43,9 +43,21 @@ class ModelGeneral():
         s = f"""SELECT {','.join(columns) if columns is not None else '*'} FROM {self.table}"""
         return self.execute(s, fetch=True)
 
-    def search(self, data):
+    def search(self, data, join_table=None, columns=None):
         """Cerca record con criteri specifici"""
-        s = f"""SELECT * FROM {self.table} WHERE {' AND '.join([f'{key} = ?' for key in data.keys()])}"""
+        s = f"""SELECT {','.join(columns) if columns is not None else '*'} FROM {self.table}"""
+
+        if join_table:
+            for join in join_table:
+                s += f" {join['typed']} JOIN {join['table']} ON {join['on']}"
+        
+        if data:
+            s += f" WHERE {' AND '.join([f'{key} = ?' for key in data.keys()])}"
+
+        print(s)
+        print(tuple(data.values()))    
+        print('-'*60+"\n\n")
+        
         return self.execute(s, tuple(data.values()), fetch=True)        
     
     def paginate(self, page=1, limit=10, data=None, join_table=None, columns=None):

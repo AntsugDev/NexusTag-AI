@@ -86,19 +86,24 @@ def valutazione_controller(valutazione_router: APIRouter):
             print(f"Errore durante l'estrazione dati valutazione: {e}")
             raise e  
 
-    def valutazione_controller(valutazione_router: APIRouter):
-        @valutazione_router.get("/{document_id}",tags=["valutations"], description="Get valutation for document")
-        def valutazione(document_id: int,user: dict = Depends(verify_token)):
-            try:
-                if user.get("username") != "admin":
-                    raise HTTPException(status_code=403, detail="Forbidden: Admin only")
-                from database.model.chunks_table import ChunkTable
-                chunk_table = ChunkTable()
-                data = chunk_table.get_chunks_by_document_id(document_id)
-                r = extract_data_for_evaluation(data)
-                return response(msg="Valutations", data=r)
-            except Exception as e:
-                raise ExceptionRequest(message=str(e), status_code=422)
+    @valutazione_router.get("/{document_id}",tags=["valutations"], description="Get valutation for document")
+    def valutazione(document_id: int,user: dict = Depends(verify_token)):
+        try:
+            if user.get("username") != "admin":
+                raise HTTPException(status_code=403, detail="Forbidden: Admin only")
+            from database.model.chunks_table import ChunkTable
+            chunk_table = ChunkTable()
+            data = chunk_table.get_chunks_by_document_id(document_id, join_table=[
+                    {
+                        "typed": "LEFT",
+                        "table": "t_strategy_chunk",
+                        "on": "chunks.strategy_chunk = t_strategy_chunk.id"
+                    }
+                ], columns=["chunks.*", "t_strategy_chunk.name"])
+            r = extract_data_for_evaluation(data)
+            return response(msg="Valutations", data=r)
+        except Exception as e:
+            raise ExceptionRequest(message=str(e), status_code=422)
 
     @valutazione_router.post("/",tags=["valutations"], description="Insert valutation")
     def insert_valutation(evaluations_request: EvaluationsRequest,user: dict = Depends(verify_token)):
