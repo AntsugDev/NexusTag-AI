@@ -72,6 +72,7 @@ def valutazione_controller(valutazione_router: APIRouter):
                 current_tokens = item.get('token_count', 0)
                 item['global_avg'] = round(avg_tokens, 2)
                 item['deviation'] = round(current_tokens - avg_tokens, 2)
+                item['range_token'] = current_tokens > int(os.getenv('K_MIN_TOKEN')) and current_tokens < int(os.getenv('K_MAX_TOKEN'))
 
             return {
                 "chunks": selection,
@@ -79,7 +80,9 @@ def valutazione_controller(valutazione_router: APIRouter):
                     "total_chunks": total_chunks,
                     "avg_tokens": round(avg_tokens, 2),
                     "stdev_tokens": round(stdev_tokens, 2),
-                    "total_tokens": sum(token_counts)
+                    "total_tokens": sum(token_counts),
+                    "min_token": int(os.getenv('K_MIN_TOKEN')),
+                    "max_token": int(os.getenv('K_MAX_TOKEN'))
                 }
             }
         except Exception as e:
@@ -112,7 +115,7 @@ def valutazione_controller(valutazione_router: APIRouter):
                 raise HTTPException(status_code=403, detail="Forbidden: Admin only")
             from database.model.evalutations import Evaluations
             evaluations = Evaluations()
-            evaluations.insert_evaluation(evaluations_request.document_id, evaluations_request.avg_score, evaluations_request.total_score, evaluations_request.random_chunks_evaluation, evaluations_request.metadata)
+            evaluations.insert_evaluation(evaluations_request)
             return response(msg="Valutation inserted", data={})
         except Exception as e:
             raise ExceptionRequest(message=str(e), status_code=422)

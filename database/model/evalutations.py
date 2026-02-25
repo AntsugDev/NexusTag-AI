@@ -7,13 +7,13 @@ class Evaluations(ModelGeneral):
     def __init__(self):
          self.table = "evaluations"
 
-    def insert_evaluation(self, document_id, avg_score, total_score, random_chunks_evaluation, metadata):
+    def insert_evaluation(self, evaluations_request):
         return self.insert({
-            "document_id": document_id,
-            "avg_score": avg_score,
-            "total_score": total_score,
-            "random_chunks_evaluation": random_chunks_evaluation,
-            "metadata": metadata
+            "document_id": evaluations_request.document_id,
+            "avg_score": evaluations_request.avg_score,
+            "total_score": evaluations_request.total_score,
+            "random_chunks_evaluation": evaluations_request.random_chunks_evaluation,
+            "metadata": evaluations_request.metadata
         })
 
     def get_evaluation(self, document_id):

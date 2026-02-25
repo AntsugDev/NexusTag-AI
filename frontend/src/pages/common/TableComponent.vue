@@ -39,6 +39,10 @@
             </div>
         </template>
 
+        <template #footer>
+            <slot name="end"></slot>
+        </template>
+
 
     </DataTable>
 
@@ -78,7 +82,6 @@ defineComponent({
 })
 
 const getName = (field, isHeader) => {
-    console.log(field, isHeader)
     return isHeader ? 'header_' + field : 'content_' + field
 }
 
@@ -183,9 +186,13 @@ const setRows = computed(() => {
     border-top-right-radius: 8px;
 }
 
-.p-datatable-header-cell {
+.p-datatable-header-cell, .p-datatable-footer {
     background-color: #314158 !important;
     color: #ffff !important;
+}
+.p-datatable-footer {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
 span[data-pc-section="sort"]>svg {

@@ -11,7 +11,8 @@ import Badge from 'primevue/badge';
 import Knob from 'primevue/knob';
 import DialogCommon from '../common/DialogCommon.vue';
 import Chart from 'primevue/chart';
-
+import Tag from 'primevue/tag';
+import Button from 'primevue/button';
 
 const { t } = useI18n()
 const route = useRoute()
@@ -127,7 +128,7 @@ const loadEvaluationData = async () => {
 
         // Initialize evaluations
         chunks.value.forEach(chunk => {
-            evaluations.value[chunk.order] = 0
+            evaluations.value[chunk.id] = 0
         })
     } catch (error) {
         console.error('Error fetching evaluation data:', error)
@@ -163,9 +164,9 @@ const getMarginSeverity = (deviation) => {
     return 'info'
 }
 
-const getMarginLabel = (deviation) => {
-    if (deviation > 0) return '+' + deviation
-    return deviation
+const getRangeTokenLabel = (deviation) => {
+    if (deviation) return 'success'
+    return 'danger'
 }
 
 const totalEvaluation = computed(() => {
@@ -177,16 +178,44 @@ const totalEvaluation = computed(() => {
     return sum
 })
 
+const clearEvaluation = () => {
+    Object.entries(evaluations.value).forEach(([key, value]) => {
+        evaluations.value[key] = 0
+    })
+}
+
+const setPonderato = (item) => {
+    const token = item.token_count
+    let deviation = parseInt(item.deviation)
+    if (deviation < 0) deviation = -deviation
+    const ponderato = 100/parseInt(token) 
+    return {
+        value: ponderato.toFixed(2), color: ponderato > 50 ? 'success' : 'danger'
+    }
+
+}
+
 const submitEvaluation = () => {
 
-    console.log(evaluations.value)
-    // This will be implemented later as requested
-    toast.add({
-        severity: 'info',
-        summary: 'Info',
-        detail: 'Funzionalità di invio valutazione non ancora implementata',
-        life: 3000
-    })
+    let valid = Object.entries(evaluations.value).filter(([key, value]) => value > 0).length > 0
+    if (!valid) {
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: t('valutazione.valuation_error'),
+            life: 3000
+        })
+        return
+    } else {
+        console.log(evaluations.value)
+
+    }
+    // toast.add({
+    //     severity: 'info',
+    //     summary: 'Info',
+    //     detail: 'Funzionalità di invio valutazione non ancora implementata',
+    //     life: 3000
+    // })
 }
 
 </script>
@@ -198,7 +227,6 @@ const submitEvaluation = () => {
         <pre style="color: red;">showChart{{ showChart }}</pre>
         <DialogCommon :header="t('valutazione.chart_title')" v-model:visible="showChart">
             <template #default>
-                cazzo
                 <Chart type="bar" :data="chartData" :options="chartOptions" class="w-full h-full" />
             </template>
 
@@ -211,6 +239,14 @@ const submitEvaluation = () => {
             <div class="stat-mini">
                 <span class="label">{{ t('valutazione.avg_tokens') }}</span>
                 <span class="value">{{ stats.avg_tokens }}</span>
+            </div>
+            <div class="stat-mini">
+                <span class="label">{{ t('valutazione.min_token', { min_token: stats.min_token }) }}</span>
+                <span class="value">{{ stats.min_token }}</span>
+            </div>
+            <div class="stat-mini">
+                <span class="label">{{ t('valutazione.max_token', { max_token: stats.max_token }) }}</span>
+                <span class="value">{{ stats.max_token }}</span>
             </div>
             <div class="stat-mini">
                 <span class="label">{{ t('valutazione.total_tokens') }}</span>
@@ -226,17 +262,22 @@ const submitEvaluation = () => {
             {
                 field: 'order',
                 label: t('chunks.order'),
-                sortable: true
+                sortable: false
             },
             {
                 field: 'content',
                 label: t('chunks.content'),
-                sortable: true
+                sortable: false
             },
             {
                 field: 'deviation',
                 label: t('valutazione.deviation'),
                 sortable: true
+            },
+            {
+                field: 'range_token',
+                label: t('valutazione.range_token'),
+                sortable: false
             },
             {
                 field: 'token_count',
@@ -246,6 +287,11 @@ const submitEvaluation = () => {
             {
                 field: 'rating',
                 label: t('valutazione.rating'),
+                sortable: true
+            },
+            {
+                field: 'ponderato',
+                label: t('valutazione.pondered'),
                 sortable: true
             }
         ]">
@@ -269,10 +315,27 @@ const submitEvaluation = () => {
                 {{ item.token_count }}
             </template>
             <template #content_rating="{ item }">
-                <Knob v-model="evaluations[item.order]" :min="0" :max="5" :step="1" :showValue="true"
+                <Knob v-model="evaluations[item.id]" :min="0" :max="5" :step="1" :showValue="true"
                     valueTemplate="{value}" :readonly="false" :disabled="false" :size="50" :strokeWidth="6"
                     :ptOptions="{ mergeProps: true }"
                     style="width: 60%;background-color: #fff;padding: 5px;border-radius: 10px;align-content: center;" />
+            </template>
+            <template #content_range_token="{ item }">
+                <Badge value=" " :severity="getRangeTokenLabel(item.range_token)"></Badge>
+            </template>
+            <!-- <template #content_ponderato="{ item }">
+                <Button icon="pi pi-percentage"  disabled iconPos="right" :label="setPonderato(item)?.value ?? 0" :severity="setPonderato(item)?.color ?? 'info'"></Button>
+            </template> -->
+            <template #end>
+                <div class="footer">
+                    <span><strong>{{ t('valutazione.valutation_total') }}</strong>:</span>
+                    <Tag :value="totalEvaluation" severity="info" icon="pi pi-calculator"></Tag>
+                    <i class="pi pi-send" @click="submitEvaluation"
+                        v-tooltip.bottom="t('valutazione.submit_evaluation')"
+                        style="color: #05DF72;margin-top:10px"></i>
+                    <i class="pi pi-trash" @click="clearEvaluation" v-tooltip.bottom="t('valutazione.clear_evaluation')"
+                        style="color: #E7180B;margin-top:10px;margin-left: 10px;"></i>
+                </div>
             </template>
         </TableComponent>
 
@@ -281,6 +344,18 @@ const submitEvaluation = () => {
 </template>
 
 <style scoped>
+.footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-content: center;
+}
+
+.footer span {
+    margin-top: 4px;
+    margin-right: 19px;
+}
+
 .fieldset {
     border: 1px solid #99A1AF;
     border-radius: 5px;

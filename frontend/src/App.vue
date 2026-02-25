@@ -25,7 +25,7 @@ onUnmounted(() => {
       <component :is="Component" />
     </transition>
   </router-view>
-  <Toast />
+  <Toast  position="top-center"/>
   <ConfirmDialog />
 </template>
 
