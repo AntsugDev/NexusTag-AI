@@ -69,7 +69,7 @@ const messages = {
       scheduler_waiting_note:
         "File in attesa di elaborazione da parte dello scheduler",
       rework: "Documento riabilitato per l'elaborazione",
-      scheduler_text_waiting: "Scheduler in attesa",
+      scheduler_text_waiting: "Scheduler in attesa (restano {time} secondi)",
       scheduler_text_running: "Scheduler è attivo",
       view_chunks: "Vedi i Chunks",
       view_evaluation: "Fai il test di valutazione",
@@ -215,7 +215,7 @@ const messages = {
       scheduler_running: "Scheduler running...",
       scheduler_waiting_note: "File waiting for processing by the scheduler",
       rework: "Document re-enabled for processing",
-      scheduler_text_waiting: "Scheduler waiting",
+      scheduler_text_waiting: "Scheduler waiting (remain {time}s)",
       scheduler_text_running: "Scheduler running",
       text_chunked: "Document split into chunks",
       text_not_chunked: "Document not split into chunks",

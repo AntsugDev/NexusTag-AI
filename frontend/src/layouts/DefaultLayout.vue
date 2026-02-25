@@ -84,7 +84,7 @@ const messageComputed = computed(() => {
     }
     if (!schedulerStore.isRunning) {
         message = {
-            text: t('documents.scheduler_text_waiting'),
+            text: t('documents.scheduler_text_waiting',{time:schedulerStore.formattedRemaining}),
             severity: 'warn'
         }
     } else {

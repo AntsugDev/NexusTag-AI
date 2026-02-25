@@ -26,13 +26,21 @@ class StatusFile(ModelGeneral):
     def delete(self,id:int):
         return self.delete(id) 
 
+    def _get_id(self, name:str):
+        search = self.get_by_name(name);
+        if search:
+            return dict(search[0]).get('id')
+        else:
+            raise ExceptionRequest(message=f"Status file not found: {name}", status_code=404)    
+
     def basic_data(self):
         try:
             data =[
             {"name":"uploaded"},
             {"name":"processed"},
             {"name":"reprocessed"},
-            {"name":"error"}
+            {"name":"error"},
+            {"name": "pending"}
         ]  
             for item in data:
                 self.create(item['name']) 

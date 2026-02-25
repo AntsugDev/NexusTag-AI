@@ -41,20 +41,29 @@ class Documents(ModelGeneral):
         })
 
     def get_documents_ready_to_process(self):
-        query = f"SELECT * FROM {self.table} WHERE status_file IN ('uploaded', 'error', 'reprocessed')"
+        query = f"SELECT * FROM {self.table} WHERE {self.table}.status_file IN ( (select t_status_file.id from t_status_file where t_status_file.name in ('uploaded', 'error', 'reprocessed')) )"
         return self.statment(query, fetch=True)  
 
+    def __get_status(self, name):
+        try:
+            response = self.status_file._get_id(name)
+            if response:
+                return response
+            else:
+                raise Exception("Status file not found")
+        except Exception as e:
+            raise e    
     def update_processed(self, id):
-        return self.update({"status_file": "processed"}, id) 
+        return self.update({"status_file": self.__get_status("processed")}, id) 
 
     def update_reprocessed(self, id):
-        return self.update({"status_file": "reprocessed"}, id)     
+        return self.update({"status_file": self.__get_status("reprocessed")}, id)     
 
     def update_pending(self, id):
-        return self.update({"status_file": "pending"}, id) 
+        return self.update({"status_file": self.__get_status("pending")}, id) 
 
     def update_error(self, id):
-        return self.update({"status_file": "error"}, id)       
+        return self.update({"status_file": self.__get_status("error")}, id)       
 
     def select_document(self, id):
         show = self.show(id)
