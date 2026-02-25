@@ -2,6 +2,8 @@
     <Card class="page glass-panel">
         <template #header>
             <div class="title">
+                <i class="pi pi-arrow-left cursor-pointer mr-2" @click="back" :alt="computedBackRoute"
+                    :title="computedBackRoute" v-if="backRoute?.to"></i>
                 <h2>{{ title }}</h2>
             </div>
         </template>
@@ -11,22 +13,37 @@
     </Card>
 </template>
 <script lang="js" setup>
-import { defineComponent, defineProps } from 'vue';
+import { defineComponent, defineProps, computed } from 'vue';
 import Card from 'primevue/card';
+import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 defineComponent({
     name: 'PageBase',
     components: {
         Card
     }
 })
-
+const { t } = useI18n()
+const router = useRouter()
 const props = defineProps({
     title: {
         type: String,
         required: true
+    },
+    backRoute: {
+        type: String,
+        required: false
     }
 })
+const computedBackRoute = computed(() => {
+    if (props.backRoute?.name) return t('common.back', { backroute: props.backRoute?.name })
+    return t('common.back')
+})
 
+const back = () => {
+    if (props.backRoute?.to) router.push({ name: props.backRoute.to })
+    else router.back()
+}
 </script>
 <style lang="css" scoped>
 .page {
@@ -38,6 +55,7 @@ const props = defineProps({
 .title {
     display: flex;
     flex: 1;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
 
@@ -61,6 +79,7 @@ const props = defineProps({
     padding: 10px;
     border-radius: 7px;
 }
+
 .p-fileupload-basic-content:hover {
     border-color: var(--p-green-500)
 }

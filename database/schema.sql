@@ -24,19 +24,28 @@ CREATE TABLE t_strategy_chunk (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+DROP TABLE IF EXISTS t_status_file;
+CREATE TABLE t_status_file (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 DROP  TABLE IF EXISTS documents;
 CREATE TABLE documents (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     name_file TEXT NOT NULL UNIQUE,
-    status_file TEXT NULL,  -- uploaded | processed | error
+    status_file INTEGER NULL,  -- uploaded | processed | error
     mime_type TEXT NULL,
     size INTEGER NULL,
     topic INTEGER NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (topic) REFERENCES t_topic(id) ON DELETE CASCADE
+    FOREIGN KEY (topic) REFERENCES t_topic(id) ON DELETE CASCADE,
+    FOREIGN KEY (status_file) REFERENCES t_status_file(id) ON DELETE CASCADE
 );
 
 DROP  TABLE IF EXISTS chunks;
@@ -57,13 +66,7 @@ CREATE TABLE chunks (
 
 );
 
--- Tabella Virtuale per sqlite-vec (4096 è la dimensione di Llama3)
--- embedding float[4096] definisce un vettore di 4096 numeri a virgola mobile
-DROP TABLE IF EXISTS vss_chunks;
-CREATE VIRTUAL TABLE vss_chunks USING vec0(
-    chunk_id INTEGER PRIMARY KEY,
-    embedding float[4096]
-);
+
 
 DROP  TABLE IF EXISTS queries;
 CREATE TABLE queries (
@@ -142,4 +145,12 @@ CREATE TABLE evaluations (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
+);
+
+-- Tabella Virtuale per sqlite-vec (4096 è la dimensione di Llama3)
+-- embedding float[4096] definisce un vettore di 4096 numeri a virgola mobile
+DROP TABLE IF EXISTS vss_chunks;
+CREATE VIRTUAL TABLE vss_chunks USING vec0(
+    chunk_id INTEGER PRIMARY KEY,
+    embedding float[4096]
 );

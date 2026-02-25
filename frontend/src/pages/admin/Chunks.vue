@@ -8,8 +8,10 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Tag from 'primevue/tag'
 import { useAuthStore } from '../../store/auth'
-
+import PageBase from '../common/PageBase.vue'
 import api from '../../api/axios'
+import TableComponent from '../common/TableComponent.vue'
+import Editor from 'primevue/editor';
 
 const { t } = useI18n()
 const route = useRoute()
@@ -64,53 +66,46 @@ const goBack = () => {
 </script>
 
 <template>
-    <div class="admin-chunks">
-        <div class="page-header">
-            <div class="flex align-items-center gap-3">
-                <Button icon="pi pi-arrow-left" text rounded @click="goBack" />
-                <h1>{{ t('chunks.title', { fileName: fileName || `Document #${documentId}` }) }}</h1>
-            </div>
-            <p>{{ t('chunks.subtitle') }}</p>
-        </div>
+    <PageBase :title="t('chunks.title', { fileName: fileName || `Document #${documentId}` })"
+        :backRoute="documentId ? { name: t('documents.title'), to: 'Admin' } : null">
 
-        <DataTable v-model:filters="filters" :value="chunks" lazy paginator :rows="rows" :totalRecords="totalRecords"
-            :loading="loading" @page="onPage($event)" class="glass-panel main-table" responsiveLayout="stack"
-            breakpoint="960px">
-            <template #header>
-                <div class="table-header">
-                    <span class="p-icon-field search-input">
-                        <i class="pi pi-search p-input-icon" />
-                        <InputText v-model="filters['global'].value" placeholder="Cerca nel contenuto..."
-                            class="w-full" />
-                    </span>
-                    <Button icon="pi pi-refresh" rounded raised @click="loadLazyData()" />
-                </div>
+        <TableComponent :items="documechunksnts" :columns="[
+            {
+                field: 'order_chunk',
+                header: t('chunks.order'),
+                class: 'order-column'
+            },
+            {
+                field: 'content',
+                header: t('chunks.content'),
+                class: 'chunk-content'
+            },
+            {
+                field: 'token_count',
+                header: t('chunks.tokens'),
+                class: 'hide-mobile'
+            },
+            {
+                field: 'strategy_chunk',
+                header: t('chunks.strategy'),
+                class: 'hide-mobile'
+            },
+            {
+                field: 'is_convert_embeded',
+                header: t('chunks.embedded'),
+                class: 'hide-mobile'
+            }
+        ]" :rows="rows" :totalRecords="totalRecords" @refresh="loadLazyData">
+            <template #content_content="{ item }">
+                <Editor :modelValue="item.content" :readOnly="true"></Editor>
+            </template>
+            <template #is_convert_embeded_content="{ item }">
+                <Tag :value="item.is_convert_embeded ? t('common.si') : t('common.no')" :severity="item.is_convert_embeded ? 'success' : 'danger'"></Tag>
             </template>
 
-            <Column field="order_chunk" :header="t('chunks.order')" class="order-column"></Column>
-            <Column field="content" :header="t('chunks.content')">
-                <template #body="{ data }">
-                    <div class="chunk-content">
-                        <code>{{ data.content }}</code>
-                    </div>
-                </template>
-            </Column>
-            <Column field="token_count" :header="t('chunks.tokens')" class="hide-mobile"></Column>
-            <Column field="strategy_chunk" :header="t('chunks.strategy')" class="hide-mobile">
-                <template #body="{ data }">
-                    <Tag :value="data.strategy_chunk" severity="info" />
-                </template>
-            </Column>
-            <Column field="is_convert_embeded" :header="t('chunks.embedded')">
-                <template #body="{ data }">
-                    <Tag :value="data.is_convert_embeded ? 'Si' : 'No'"
-                        :severity="data.is_convert_embeded ? 'success' : 'danger'" />
-                </template>
-            </Column>
+        </TableComponent>
 
-            <template #empty> {{ t('common.noData') }} </template>
-        </DataTable>
-    </div>
+    </PageBase>
 </template>
 
 <style scoped>

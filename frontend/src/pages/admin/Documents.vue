@@ -196,7 +196,8 @@ const header = computed(() => {
 
     return [
         { label: t('documents.name'), sortable: true, field: 'name_file' },
-        { label: t('documents.status'), sortable: true, field: 'status_file' },
+        { label: t('documents.ext'), sortable: true, field: 'mime_type' },
+        { label: t('documents.status'), sortable: true, field: 'status_file_name' },
         { label: t('documents.size'), sortable: true, field: 'size' },
         { label: t('documents.date'), sortable: true, field: 'created_at' },
         { label: t('documents.topic'), sortable: true, field: 'topic_name' },
@@ -213,8 +214,12 @@ const header = computed(() => {
         <template #default>
             <TableComponent :items="documents" :columns="header" :rows="rows" :totalRecords="totalRecords" @refresh="loadLazyData"
                 :loading="loading" :globalFilterFields="['name_file', 'status_file', 'topic_name']">
-                <template #content_status_file="{ item }">
-                    <Tag :value="item.status_file" :severity="getStatusSeverity(item.status_file)"></Tag>
+                
+                <template #content_name_file="{ item }">
+                    {{ item.name_file ? item.name_file.toString().split('.')[0] : "" }}
+                </template>
+                <template #content_status_file_name="{ item }">
+                    <Tag :value="item.status_file_name" :severity="getStatusSeverity(item.status_file_name)"></Tag>
                 </template>
 
                 <template #content_created_at="{ item }">
@@ -228,52 +233,33 @@ const header = computed(() => {
                     <Badge :severity="item.is_chunked ? 'success' : 'danger'" size="xlarge" v-tooltip="item.is_chunked ? t('documents.text_chunked') : t('documents.text_not_chunked')"></Badge>
                 </template>
                 <template #content_actions="{item}">
-                    <IconsTable :icons="[
+                    <IconsTable v-if="item.status_file_name !== 'uploaded'" :icons="[
                         {
                             class: 'pi pi-eye',
                             action: () => viewChunks(item),
                             color: '#178236',
                             tooltip: t('documents.view_chunks'),
-                            is_view: item.status_file === 'processed'
+                            is_view: item.status_file_name === 'processed'
                         },
                         {
                             class: 'pi pi-chart-bar',
                             action: () => viewEvaluation(item),
                             color: '#314158',
                             tooltip: t('documents.view_evaluation'),
-                            is_view: item.status_file === 'processed'
+                            is_view: item.status_file_name === 'processed'
                         },
                         {
                             class: 'pi pi-trash',
                             action: () => deleteDocument(item.id),
                             color: '#9F0712',
                             tooltip: t('documents.delete'),
-                            is_view: item.status_file === 'reprocessed' || item.status_file === 'error'
+                            is_view: item.status_file_name === 'reprocessed' || item.status_file === 'error'
                         }
                     ]"></IconsTable>
                 </template>
             </TableComponent>
         </template>
     </PageBase>
-    <div class="admin-documents">
-        <BlockUI :blocked="isProcessing" fullScreen>
-            <div v-if="isProcessing" class="processing-overlay">
-                <div class="processing-content glass-panel">
-                    <i class="pi pi-cog pi-spin text-4xl mb-3 text-primary"></i>
-                    <h3>Elaborazione in corso...</h3>
-                    <p class="text-secondary mb-4">Stiamo analizzando il documento e creando i chunk.</p>
-                    <ProgressBar mode="indeterminate" style="height: 6px"></ProgressBar>
-                </div>
-            </div>
-        </BlockUI>
-
-
-
-
-
-
-
-    </div>
 </template>
 
 <style scoped>

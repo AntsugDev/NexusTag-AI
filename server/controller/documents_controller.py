@@ -25,8 +25,13 @@ def documents_controller(documents_router):
                 'on': 'documents.topic = t_topic.id',
                 'typed': 'inner'
             },
+            {
+                'table': 't_status_file',
+                'on': 'documents.status_file = t_status_file.id',
+                'typed': 'inner'
+            }
             
-            ], columns=["documents.*", "t_topic.name as topic_name", "CASE WHEN EXISTS (SELECT 1 FROM chunks WHERE document_id = documents.id) THEN 1 ELSE 0 END as is_chunked"])
+            ], columns=["documents.*", "t_topic.name as topic_name", "t_status_file.name as status_file_name", "CASE WHEN EXISTS (SELECT 1 FROM chunks WHERE document_id = documents.id) THEN 1 ELSE 0 END as is_chunked"])
             total = doc_model.count_search(data=data)
             return response(msg="Documents list retrieved", data={
                 "items": [dict(item) for item in items],
@@ -57,13 +62,13 @@ def documents_controller(documents_router):
                 shutil.copyfileobj(file.file, buffer)
 
             documents = Documents()
+            
             last_id = documents.insert_file({
                 "user_id": user.get("id"),
                 "name_file": file.filename,
-                "status_file": "uploaded",
                 "mime_type": file.content_type,
                 "size": file.size,
-                "topic": argument
+                "topic": argument,
             })
             return response(msg="File uploaded successfully, wait for processing", data={
                 "filename" : file.filename,

@@ -4,24 +4,37 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from .model_general import ModelGeneral 
 from database.model.topic import TopicChunks
 from database.model.strategy import StrategyChunk
+from database.model.status import StatusFile
 
 class Documents(ModelGeneral):
     def __init__(self):
          self.table = "documents"
          self.topic = TopicChunks()
          self.strategy_chunk = StrategyChunk()
+         self.status_file = StatusFile()
 
     def insert_file(self, data):
-        topic_id = self.topic.get_by_name(data.get("topic"))
-        if not topic_id:
-            topic_id = self.topic.create(data.get("topic"))
+        topic = self.topic.get_by_name(data.get("topic"))
+        if not topic:
+            topic = self.topic.create(data.get("topic"))
+        topic_id =None
+        if topic:
+            row = dict(topic[0])
+            topic_id = row.get('id')
 
-        strategy_chunk_id = self.strategy_chunk.get_by_name(data.get("strategy_chunk"))
+        status_file= self.status_file.get_by_name('uploaded')
+        status_file_id = None
+        if status_file:
+            row = dict(status_file[0])
+            status_file_id = row.get('id')
+
+        if not status_file_id or not topic_id:
+            raise Exception("Status file or topic not found")    
 
         return self.insert({
             "user_id": data.get("user_id"),
             "name_file": data.get("name_file"),
-            "status_file": data.get("status_file", "uploaded"),
+            "status_file": status_file_id,
             "mime_type": data.get("mime_type"),
             "size": data.get("size"),
             "topic": topic_id,
