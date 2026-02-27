@@ -1,10 +1,15 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, Json
+from typing import Optional, Any
 from datetime import datetime
+
+class JsonEvaluation(BaseModel):
+    chunk_id: int = Field(..., description="Chunk ID")
+    rating: float = Field(..., description="Rating")
 
 class EvaluationsRequest(BaseModel):
     document_id: int = Field(..., description="Document ID")
-    avg_score: float = Field(..., description="Average score")
-    total_score: float = Field(..., description="Total score")
-    random_chunks_evaluation: int = Field(..., description="Number of random chunks evaluation")
-    metadata: dict = Field(..., description="Metadata")
+    total_chunks: int = Field(..., description="Total chunks")
+    avg_tokens: float = Field(..., description="Average tokens")
+    total_token: int = Field(..., description="Total token")
+    evalutation_for_row: list[JsonEvaluation] = Field(..., description="Evalutation for row")
+    total_evaluation: float = Field(..., description="Total evaluation")

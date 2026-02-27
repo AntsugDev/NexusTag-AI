@@ -39,6 +39,9 @@
             </div>
         </template>
 
+        <template #paginatorcontainer>
+            <slot name="changed"></slot>
+        </template>
         <template #footer>
             <slot name="end"></slot>
         </template>

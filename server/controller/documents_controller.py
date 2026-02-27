@@ -12,7 +12,7 @@ import shutil
 
 def documents_controller(documents_router):
     @documents_router.get("/documents", tags=["documents"], description="Get list documents for user uplaoded")
-    def get_user_documents(page: int = 1, limit: int = 10, user: dict = Depends(verify_token)):
+    def get_user_documents(page: int = 1, limit: int = 5, user: dict = Depends(verify_token)):
         try:
             from database.model.documents import Documents
             doc_model = Documents()

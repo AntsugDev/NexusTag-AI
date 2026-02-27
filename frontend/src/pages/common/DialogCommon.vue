@@ -1,8 +1,12 @@
 <template>
     <Dialog v-model:visible="visible" modal position="top" :header="header" maximizable
-    style="    min-width: 500px !important;min-height: 400px"
-    >
-        <slot></slot>
+        style="    min-width: 500px !important;min-height: 200px">
+        <div class="content">
+            <slot></slot>
+        </div>
+        <div class="footer">
+            <slot name="footer" ></slot>
+        </div>
     </Dialog>
 
 </template>
@@ -45,23 +49,31 @@ defineComponent({
     justify-content: flex-end;
     align-items: center;
     padding: 1rem;
+    margin-top: 10px;
+    border-top: 1px solid #99A1AF;
+}
+.content {
+    padding: 1rem;
+    min-height: 100px;
 }
 </style>
 <style>
-.p-dialog{
-    min-width: 300px!important;
+.p-dialog {
+    min-width: 300px !important;
 }
+
 .p-dialog-header {
     padding: 10px;
     background-color: #314158;
     border-bottom: 1px solid #99A1AF;
     color: #fff;
 }
-.p-dialog-header-actions{
+
+.p-dialog-header-actions {
     margin-right: 10px;
 }
 
 .p-dialog-header-actions>.p-button {
-    background-color: #fff!important;
+    background-color: #fff !important;
 }
 </style>

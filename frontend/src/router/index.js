@@ -41,6 +41,13 @@ const routes = [
         meta: { role: "admin" },
       },
       {
+        path: "admin/documents/:id/valutazione-embed",
+        name: "ValutazioneEmbed",
+        component: () => import("../pages/admin/ValutazioneEmbed.vue"),
+        meta: { role: "admin" },
+      },
+      
+      {
         path: "admin/failed-jobs",
         name: "FailedJobs",
         component: () => import("../pages/admin/FailedJobs.vue"),

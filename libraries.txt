@@ -32,3 +32,4 @@ sqlite-vec
 python-multipart
 
 openpyxl
+nltk

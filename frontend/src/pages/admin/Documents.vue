@@ -26,7 +26,7 @@ const isProcessing = ref(false)
 const showErrorDialog = ref(false)
 const errorMessage = ref('')
 const totalRecords = ref(0)
-const rows = ref(10)
+const rows = ref(5)
 const first = ref(0)
 const filters = ref({
     global: { value: null, matchMode: 'contains' },

@@ -13,6 +13,8 @@ import DialogCommon from '../common/DialogCommon.vue';
 import Chart from 'primevue/chart';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
+import InputNumber from 'primevue/inputnumber';
+import Fieldset from 'primevue/fieldset';
 
 const { t } = useI18n()
 const route = useRoute()
@@ -24,7 +26,7 @@ const documentName = route.query.name || 'Document'
 const chunks = ref([])
 const stats = ref({})
 const loading = ref(false)
-const evaluations = ref({}) // key: order, value: rating
+const evaluations = ref({})
 const showChart = ref(false)
 
 const chartData = computed(() => {
@@ -117,7 +119,8 @@ const chartOptions = computed(() => {
         }
     }
 })
-
+const isReadonly = ref(false)
+const evaluationsData = ref({})
 const loadEvaluationData = async () => {
     loading.value = true
     try {
@@ -125,10 +128,10 @@ const loadEvaluationData = async () => {
         const data = result.data.result
         chunks.value = data.chunks
         stats.value = data.stats
-
-        // Initialize evaluations
+        evaluationsData.value = data.evaluations
+        isReadonly.value = Object.entries(evaluationsData.value).length > 0
         chunks.value.forEach(chunk => {
-            evaluations.value[chunk.id] = 0
+            evaluations.value[chunk.id] = chunk.rating ?? 0
         })
     } catch (error) {
         console.error('Error fetching evaluation data:', error)
@@ -149,7 +152,7 @@ onMounted(() => {
 
 const isEvaluationComplete = computed(() => {
     return chunks.value.length > 0 &&
-        chunks.value.every(chunk => evaluations.value[chunk.order] !== null)
+        chunks.value.every(chunk => evaluations.value[chunk.id] !== undefined && evaluations.value[chunk.id] !== null)
 })
 
 const canSubmit = computed(() => {
@@ -173,9 +176,9 @@ const totalEvaluation = computed(() => {
     let sum = 0;
     for (const [key, value] of Object.entries(evaluations.value)) {
         let data_value = value ?? 0;
-        sum += parseInt(data_value);
+        sum += parseFloat(data_value);
     }
-    return sum
+    return sum.toFixed(2)
 })
 
 const clearEvaluation = () => {
@@ -186,52 +189,88 @@ const clearEvaluation = () => {
 
 const setPonderato = (item) => {
     const token = item.token_count
-    let deviation = parseInt(item.deviation)
-    if (deviation < 0) deviation = -deviation
-    const ponderato = 100/parseInt(token) 
+    const ponderato = stats.value.total_tokens / parseInt(token)
     return {
-        value: ponderato.toFixed(2), color: ponderato > 50 ? 'success' : 'danger'
+        value: ponderato.toFixed(2)
     }
 
 }
+const showConfirm = ref(false)
+const openDialogConfirm = () => {
+    showConfirm.value = true
+}
+const submitEvaluation = async () => {
 
-const submitEvaluation = () => {
-
-    let valid = Object.entries(evaluations.value).filter(([key, value]) => value > 0).length > 0
-    if (!valid) {
-        toast.add({
-            severity: 'error',
-            summary: t('common.error'),
-            detail: t('valutazione.valuation_error'),
-            life: 3000
+    try {
+        const evalutation_for_row = []
+        chunks.value.forEach(chunk => {
+            evalutation_for_row.push({
+                "chunk_id": chunk.id,
+                "rating": evaluations.value[chunk.id] ?? 0
+            })
         })
-        return
-    } else {
-        console.log(evaluations.value)
 
+        const result = await api.post(`/api/valutazione`, {
+            "document_id": parseInt(documentId),
+            "total_chunks": parseInt(stats.value.total_chunks),
+            "avg_tokens": parseInt(stats.value.avg_tokens),
+            "total_token": parseInt(stats.value.total_tokens),
+            "evalutation_for_row": evalutation_for_row,
+            "total_evaluation": parseFloat(totalEvaluation.value).toFixed(2)
+        })
+        if (result.status === 201) {
+            toast.add({
+                severity: 'success',
+                summary: t('common.success'),
+                detail: t('valutazione.success'),
+                life: 3000
+            })
+        }
+    } catch (e) {
+        console.error(e)
     }
-    // toast.add({
-    //     severity: 'info',
-    //     summary: 'Info',
-    //     detail: 'Funzionalità di invio valutazione non ancora implementata',
-    //     life: 3000
-    // })
 }
 
+const buildingEvaluation =async  () => {
+        try {
+            const response = await api.post('/api/valutazione/ask',{
+                chunks:chunks.value
+            });
+            const data = response.data.result
+            router.push({ name: 'ValutazioneEmbed', params: { id: documentId }, query: { d: btoa(JSON.stringify(data)) } })
+        } catch (e) {
+        }
+}
+
+const getColorScore = (score) => {
+    if (parseFloat(score) >= 80) return 'color-score-high'
+    else if (parseFloat(score) >= 50 && parseFloat(score) <= 79) return 'color-score-medium'
+    else return 'color-score-low'
+}
 </script>
 
 <template>
+    <DialogCommon v-model:visible="showConfirm" :header="t('valutazione.confirm')">
+        <template #default>
+            <p>{{ t('valutazione.confirm_msg', { fileName: documentName }) }}</p>
+        </template>
+        <template #footer>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <Button :label="t('common.no')" severity="primary" @click="showConfirm = false" />
+                <Button :label="t('common.si')" severity="danger" @click="submitEvaluation" />
+            </div>
+        </template>
+    </DialogCommon>
     <PageBase :title="t('valutazione.title', { fileName: documentName || `Document #${documentId}` })"
         :backRoute="documentId ? { name: t('documents.title'), to: 'Admin' } : null">
 
-        <pre style="color: red;">showChart{{ showChart }}</pre>
         <DialogCommon :header="t('valutazione.chart_title')" v-model:visible="showChart">
             <template #default>
                 <Chart type="bar" :data="chartData" :options="chartOptions" class="w-full h-full" />
             </template>
 
         </DialogCommon>
-        <Fieldset class="fieldset">
+        <div class="fieldset">
             <div class="stat-mini">
                 <span class="label">{{ t('valutazione.total_chunks') }}</span>
                 <span class="value">{{ stats.total_chunks }}</span>
@@ -252,12 +291,12 @@ const submitEvaluation = () => {
                 <span class="label">{{ t('valutazione.total_tokens') }}</span>
                 <span class="value">{{ stats.total_tokens }}</span>
             </div>
-        </Fieldset>
-
-
-
-
-
+            <div class="stat-mini" v-if="isReadonly">
+                <span class="label">{{ t('listValutazioni.score') }}</span>
+                <span :class="'value ' + getColorScore(evaluationsData.score)">{{ evaluationsData.score.toFixed(2)
+                }}</span>
+            </div>
+        </div>
         <TableComponent @refresh="loadEvaluationData" :setAllRow="true" :items="chunks" :columns="[
             {
                 field: 'order',
@@ -289,15 +328,27 @@ const submitEvaluation = () => {
                 label: t('valutazione.rating'),
                 sortable: true
             },
-            {
-                field: 'ponderato',
-                label: t('valutazione.pondered'),
-                sortable: true
-            }
+
         ]">
+            <template #changed>
+                <div class="footer">
+                    <span><strong>{{ t('valutazione.valutation_total') }}</strong>:</span>
+                    <Tag :value="totalEvaluation" severity="info" icon="pi pi-calculator"></Tag>
+                    <template v-if="!isReadonly">
+                        <i class="pi pi-send" @click="openDialogConfirm"
+                            v-tooltip.bottom="t('valutazione.submit_evaluation')"
+                            style="color: #05DF72;margin-top:10px"></i>
+                        <i class="pi pi-trash" @click="clearEvaluation"
+                            v-tooltip.bottom="t('valutazione.clear_evaluation')"
+                            style="color: #E7180B;margin-top:10px;margin-left: 10px;"></i>
+                    </template>
+                </div>
+            </template>
             <template #others>
                 <i class="pi pi-chart-bar" style="font-size: 1rem;cursor: pointer;"
                     v-tooltip.bottom="t('valutazione.view_chart')" @click="handleBarClick"></i>
+                <i class="pi pi-building" style="font-size: 1rem;cursor: pointer;"
+                    v-tooltip.bottom="t('listValutazioni.building')" @click="buildingEvaluation"></i>
             </template>
             <template #content_content="{ item }">
                 <Editor :modelValue="item.content" :readonly="true">
@@ -315,35 +366,42 @@ const submitEvaluation = () => {
                 {{ item.token_count }}
             </template>
             <template #content_rating="{ item }">
-                <Knob v-model="evaluations[item.id]" :min="0" :max="5" :step="1" :showValue="true"
-                    valueTemplate="{value}" :readonly="false" :disabled="false" :size="50" :strokeWidth="6"
-                    :ptOptions="{ mergeProps: true }"
-                    style="width: 60%;background-color: #fff;padding: 5px;border-radius: 10px;align-content: center;" />
+
+                <InputNumber v-if="!isReadonly" v-model="evaluations[item.id]" :min="0" :max="5" :maxFractionDigits="5"
+                    fluid showButtons buttonLayout="vertical" size="small"></InputNumber>
+                <Tag v-else :value="evaluations[item.id]" severity="info"></Tag>
             </template>
             <template #content_range_token="{ item }">
                 <Badge value=" " :severity="getRangeTokenLabel(item.range_token)"></Badge>
             </template>
-            <!-- <template #content_ponderato="{ item }">
-                <Button icon="pi pi-percentage"  disabled iconPos="right" :label="setPonderato(item)?.value ?? 0" :severity="setPonderato(item)?.color ?? 'info'"></Button>
-            </template> -->
-            <template #end>
-                <div class="footer">
-                    <span><strong>{{ t('valutazione.valutation_total') }}</strong>:</span>
-                    <Tag :value="totalEvaluation" severity="info" icon="pi pi-calculator"></Tag>
-                    <i class="pi pi-send" @click="submitEvaluation"
-                        v-tooltip.bottom="t('valutazione.submit_evaluation')"
-                        style="color: #05DF72;margin-top:10px"></i>
-                    <i class="pi pi-trash" @click="clearEvaluation" v-tooltip.bottom="t('valutazione.clear_evaluation')"
-                        style="color: #E7180B;margin-top:10px;margin-left: 10px;"></i>
-                </div>
+            <template #content_ponderato="{ item }">
+                <Button icon="pi pi-percentage" disabled iconPos="right" :label="setPonderato(item)?.value ?? 0"
+                    severity="info"></Button>
             </template>
         </TableComponent>
 
     </PageBase>
 
 </template>
+<style>
+.fieldset {
+    border: 1px solid #99A1AF;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: #eee;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: space-between;
+}
+</style>
 
 <style scoped>
+.h-full {
+    min-height: 400px;
+}
+
 .footer {
     display: flex;
     flex-direction: row;
@@ -356,17 +414,7 @@ const submitEvaluation = () => {
     margin-right: 19px;
 }
 
-.fieldset {
-    border: 1px solid #99A1AF;
-    border-radius: 5px;
-    padding: 10px;
-    margin-bottom: 15px;
-    background-color: #eee;
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    justify-content: space-between;
-}
+
 
 .data_general {
     flex-direction: row;
@@ -535,6 +583,18 @@ code {
 
 .p-dialog-content-cust {
     background-color: #fff !important;
+}
+
+.color-score-low {
+    color: #E7180B !important;
+}
+
+.color-score-medium {
+    color: #FE9A37 !important;
+}
+
+.color-score-high {
+    color: #2AA63E !important;
 }
 
 @media (max-width: 1200px) {

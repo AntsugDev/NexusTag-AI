@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse,Response
 import datetime
-
+from sqlite3 import Row
 class ExceptionRequest(Exception):
     def __init__(self, message: str = "Errore generico", status_code: int = 400):
         self.message = str(message)
@@ -12,8 +12,12 @@ class ExceptionRequest(Exception):
 
 
 def convert_from_pydantic(data):
-     if isinstance(data, BaseModel):
-        return data.model_dump()
+     if isinstance(data, BaseModel) or isinstance(data, Row):
+        return dict(data)
+     elif isinstance(data, list):
+        return [convert_from_pydantic(item) for item in data]
+     elif isinstance(data, dict):
+        return {k: convert_from_pydantic(v) for k, v in data.items()}
      else:
       raise TypeError(f"Expected BaseModel instance, got {type(data)}")
 

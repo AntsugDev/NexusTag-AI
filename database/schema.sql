@@ -138,13 +138,20 @@ DROP TABLE IF EXISTS evaluations;
 CREATE TABLE evaluations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     document_id INTEGER NOT NULL,
-    avg_score REAL NOT NULL,
-    total_score REAL NOT NULL,
-    random_chunks_evaluation INTEGER NOT NULL,
-    metadata JSON NULL,
+    strategy_chunk INTEGER NOT NULL,
+    topic INTEGER NOT NULL,
+    mime_type_file TEXT NOT NULL,
+    total_chunks INTEGER NOT NULL,
+    avg_tokens REAL NOT NULL,
+    total_token REAL NOT NULL,
+    evalutation_for_row JSON NULL, -- deviazione, se il token rientra nel range, valutazione della riga
+    total_evaluation REAL NOT NULL,
+    score REAL NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
+    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
+    FOREIGN KEY (strategy_chunk) REFERENCES t_strategy_chunk(id) ON DELETE CASCADE,
+    FOREIGN KEY (topic) REFERENCES t_topic(id) ON DELETE CASCADE
 );
 
 -- Tabella Virtuale per sqlite-vec (4096 è la dimensione di Llama3)
