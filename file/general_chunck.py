@@ -72,22 +72,16 @@ class GeneralChunck(ABC):
         """
         pass
 
-    async def embed(self):
+    async def embed(self, content,document_id,chunk_id):
        try:
-        chunks = self.chunck()
-        if chunks :
-            # Passiamo i parametri corretti alla classe Embed
-            # row_id non è ancora definito a livello di classe, probabilmente si riferisce al document_id
-            await Embed(
-                chunks=chunks,
-                document_id=self.document_id,
-                strategy_chunk=self.strategy_chunk(),
-                token_count=self.standard_token,
-                overlap_token=self.standard_overlap
-            ).embed()
-        else:
-            raise Exception("Cannot create embedded because chunks is null or is not reading.")    
-
+        print("content",content)
+        print("document_id",document_id)
+        print("chunk_id",chunk_id)
+        await Embed(
+            content=content,
+            chunk_id=chunk_id,
+            document_id=document_id,
+        ).embed()
        except Exception as e:
         raise e 
     
@@ -95,10 +89,10 @@ class GeneralChunck(ABC):
         s = StrategyChunk()
         match self.type_file:
             case "txt" |"log"|"md"|"sql":
-                return s._get_id(str(os.getenv("STRATEGY_CHUNK_TESTUALE")))
+                return s.get_by_name(str(os.getenv("STRATEGY_CHUNK_TESTUALE")))
             case "csv"|"xls"|"xlsx":
-                return s._get_id(str(os.getenv("STRATEGY_CHUNK_ROW")))
+                return s.get_by_name(str(os.getenv("STRATEGY_CHUNK_ROW")))
             case "pdf"|"doc"|"docx"|"docs":
-                return s._get_id(str(os.getenv("STRATEGY_CHUNK_DOC")))
+                return s.get_by_name(str(os.getenv("STRATEGY_CHUNK_DOC")))
             case _:
-                return s._get_id(str(os.getenv("STRATEGY_CHUNK_GENERICO")))   
+                return s._get_name(str(os.getenv("STRATEGY_CHUNK_GENERICO")))   

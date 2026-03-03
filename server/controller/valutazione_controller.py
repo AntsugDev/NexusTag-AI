@@ -100,6 +100,11 @@ def valutazione_controller(valutazione_router: APIRouter):
                 item['deviation'] = round(current_tokens - avg_tokens, 2)
                 item['range_token'] = current_tokens > int(os.getenv('K_MIN_TOKEN')) and current_tokens < int(os.getenv('K_MAX_TOKEN'))
 
+            # ask = generate_ask(selection)
+            # inserisco in una tabella e faccio partire lo scheduler, dove gli passo anche il documento_id, il chunk_id
+            
+
+
             return {
                 "chunks": selection,
                 "stats": {
@@ -111,7 +116,8 @@ def valutazione_controller(valutazione_router: APIRouter):
                     "max_token": int(os.getenv('K_MAX_TOKEN')),
                     
                 },
-                "evaluations": evaluations_raw
+                "evaluations": evaluations_raw,
+               
             }
         except Exception as e:
             print(f"Errore durante l'estrazione dati valutazione: {e}")

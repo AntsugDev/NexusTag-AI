@@ -159,5 +159,17 @@ CREATE TABLE evaluations (
 DROP TABLE IF EXISTS vss_chunks;
 CREATE VIRTUAL TABLE vss_chunks USING vec0(
     chunk_id INTEGER PRIMARY KEY,
-    embedding float[4096]
-);
+    embedding float[4096] distance_metric=cosine
+); 
+
+--SELECT load_extension('C:\web\Personali\NexusTag-AI\envorement\Lib\site-packages\sqlite_vec\vec0.dll');
+/*
+SELECT 
+    chunk_id, 
+    -- Calcolo la similarità (opzionale, se ti serve il valore 0-1)
+    (1 - vec_distance_cosine(embedding, ?)) as similarity
+FROM vss_chunks
+WHERE embedding MATCH ? -- Il vettore della query
+  AND k = 10            -- Restituisci i 10 più vicini
+ORDER BY vec_distance_cosine(embedding, ?) ASC;
+*/

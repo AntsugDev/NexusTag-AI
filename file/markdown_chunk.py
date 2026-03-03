@@ -80,6 +80,8 @@ class MarkDownChunk(GeneralChunck):
                             }
                             chunk_record = self.chunks.insert_chunk(chunk_data)
                             if chunk_record:
+                                print('insert chunk',chunk_record)
+                             #  self.embed(text, self.document_id, chunk_record["id"])
                                 result.append(chunk_record)
                         
                         global_order += 1 

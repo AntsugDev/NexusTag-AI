@@ -233,7 +233,7 @@ const header = computed(() => {
                     <Badge :severity="item.is_chunked ? 'success' : 'danger'" size="xlarge" v-tooltip="item.is_chunked ? t('documents.text_chunked') : t('documents.text_not_chunked')"></Badge>
                 </template>
                 <template #content_actions="{item}">
-                    <IconsTable v-if="item.status_file_name !== 'uploaded'" :icons="[
+                    <IconsTable v-if="item.status_file_name === 'processed'" :icons="[
                         {
                             class: 'pi pi-eye',
                             action: () => viewChunks(item),
