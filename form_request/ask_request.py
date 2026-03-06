@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, Json
 
 class AskRequest(BaseModel):
-     chunks: list[str] = Field(..., description="Chunks")
+     chunks: list[dict] = Field(..., description="Chunks")
+     document_id: int = Field(...,description="Document id")

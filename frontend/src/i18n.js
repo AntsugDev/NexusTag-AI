@@ -25,6 +25,7 @@ const messages = {
       table_empty: "Nessun dato trovato",
       si: "Si",
       no: "No",
+      simula:'Simula',
     },
     menu: {
       home: "Home",
@@ -125,7 +126,7 @@ const messages = {
       avg_tokens:'Media Token',
       total_evaluation:'Totale Valutazione',
       score:'Score',
-      building:'Building'
+      building:'Simula una chat'
     },
     valutazione: {
       title: "Valutazione Chunk per il documento {fileName} (pre-embedding)",
@@ -182,6 +183,7 @@ const messages = {
       table_empty: "No data found",
       si: "Yes",
       no: "No",
+       simula:'Simulate',
     },
     login: {
       title: "Portal Access",
@@ -279,7 +281,7 @@ const messages = {
       avg_tokens:'Avg Tokens',
       total_evaluation:'Total Evaluation',
       score:'Score',
-      building:'Building'
+      building:'Simulate a chat'
     },
     valutazione: {
       title: "Chunk Evaluation for document {fileName} (pre-embedding)",

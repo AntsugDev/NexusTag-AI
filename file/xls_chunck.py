@@ -52,6 +52,7 @@ class XlsChunk(GeneralChunck):
                                 })
                             })
                         if chunk:
+                            self.embed(text, self.document_id, chunk)
                             result.append(chunk)
                     count += 1
             return result

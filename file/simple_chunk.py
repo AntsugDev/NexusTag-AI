@@ -58,6 +58,7 @@ class SimpleChunk(GeneralChunck):
                          })
                         })
                        if chunk:
+                            self.embed(text, self.document_id, chunk)
                             result.append(chunk)
             else:
                 raise Exception("Errore durante la lettura del file")

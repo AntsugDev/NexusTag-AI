@@ -129,7 +129,7 @@ def valutazione_controller(valutazione_router: APIRouter):
             for chunk in chunks:
                 content += chunk.get("content")
             sentences = re.split(r'[.!?]\s+', content)
-            sample_5 = random.sample(sentences, k=min(5, len(sentences)))
+            sample_5 = random.sample(sentences, k=min(2, len(sentences)))
             return sample_5
             
         except Exception as e:
@@ -141,8 +141,20 @@ def valutazione_controller(valutazione_router: APIRouter):
         try:
             if user.get("username") != "admin":
                 raise HTTPException(status_code=403, detail="Forbidden: Admin only")
-            return response(msg="Ask", data=generate_ask(chunks.chunks))            
-            
+            ask = generate_ask(chunks)
+            from database.model.queries import Queries
+            q = Queries()
+            response = []
+            for a in ask:
+                insert = q.set_query({
+                          "user_id": user.get('id'),
+                          "queries": a,
+                          "topic_id": "",
+                          "is_evaluation": 1
+                })
+                if insert:
+                    response.append(ask)    
+            return response(msg="Asking", data=response)
             
         except Exception as e:
             raise ExceptionRequest(message=str(e), status_code=422)

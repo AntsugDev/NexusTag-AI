@@ -99,6 +99,7 @@ class CsvChunk(GeneralChunck):
                                 })
                             })
                             if chunk:
+                                self.embed(text, self.document_id, chunk)
                                 result.append(chunk)
                         else:
                             result.append({

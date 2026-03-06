@@ -1,9 +1,15 @@
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from scheduler.scheduler import Scheduler
 import datetime
 from scheduler.status import scheduler_status
+from database.model.chunks_table import ChunkTable
 
 class DocumentsJobs(Scheduler):
     def __init__(self):
+        self.cTable = ChunkTable()
         super().__init__("documents_jobs", trigger="interval", minutes=5)
 
     def handle(self):
@@ -34,6 +40,9 @@ class DocumentsJobs(Scheduler):
                         max_tries = 3
                         worked = False
                         last_error = ""
+
+                        self.cTable.delete_by_document(document["id"])
+
                         
                         while tries < max_tries and not worked:
                             tries += 1

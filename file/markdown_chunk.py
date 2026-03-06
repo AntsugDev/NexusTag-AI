@@ -81,7 +81,6 @@ class MarkDownChunk(GeneralChunck):
                             }
                             chunk_record = self.chunks.insert_chunk(chunk_data)
                             if chunk_record:
-                                print(f"Inserimento chunck eseguito con successo({chunk_record}), procedo con l'embedding")
                                 self.embed(text, self.document_id, chunk_record)
                                 result.append(chunk_data)
                             else :

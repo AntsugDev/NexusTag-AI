@@ -8,13 +8,13 @@ import PageBase from '../common/PageBase.vue'
 import TableComponent from '../common/TableComponent.vue'
 import Editor from 'primevue/editor';
 import Badge from 'primevue/badge';
-import Knob from 'primevue/knob';
 import DialogCommon from '../common/DialogCommon.vue';
 import Chart from 'primevue/chart';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import InputNumber from 'primevue/inputnumber';
-import Fieldset from 'primevue/fieldset';
+import Panel from 'primevue/panel';
+import BlockUI from 'primevue/blockui';
 
 const { t } = useI18n()
 const route = useRoute()
@@ -231,15 +231,20 @@ const submitEvaluation = async () => {
     }
 }
 
-const buildingEvaluation =async  () => {
-        try {
-            const response = await api.post('/api/valutazione/ask',{
-                chunks:chunks.value
-            });
-            const data = response.data.result
-            router.push({ name: 'ValutazioneEmbed', params: { id: documentId }, query: { d: btoa(JSON.stringify(data)) } })
-        } catch (e) {
-        }
+const ask = ref([])
+const askDialog = ref(false)
+
+const buildingEvaluation = async () => {
+    try {
+        const response = await api.post('/api/valutazione/ask', {
+            chunks: chunks.value,
+            document_id: documentId
+        });
+        ask.value = response.data.result
+        askDialog.value = true
+
+    } catch (e) {
+    }
 }
 
 const getColorScore = (score) => {
@@ -261,6 +266,21 @@ const getColorScore = (score) => {
             </div>
         </template>
     </DialogCommon>
+    <DialogCommon v-model:visible="askDialog" :header="t('listValutazioni.building')">
+        <template #default>
+            <div class="d-ask">
+                <div v-for="item, index of ask" :key="index">
+                    <BlockUI>
+                        <Panel :header="'ask '+ (index+1)">
+                            <p>{{ item }}</p>
+                            <Button :label="t('common.simula')" icon="pi pi-check" @click=""></Button>
+                        </Panel>
+                    </BlockUI>
+                </div>
+            </div>
+        </template>
+    </DialogCommon>
+
     <PageBase :title="t('valutazione.title', { fileName: documentName || `Document #${documentId}` })"
         :backRoute="documentId ? { name: t('documents.title'), to: 'Admin' } : null">
 
@@ -347,7 +367,7 @@ const getColorScore = (score) => {
             <template #others>
                 <i class="pi pi-chart-bar" style="font-size: 1rem;cursor: pointer;"
                     v-tooltip.bottom="t('valutazione.view_chart')" @click="handleBarClick"></i>
-                <i class="pi pi-building" style="font-size: 1rem;cursor: pointer;"
+                <i class="pi pi-comment" style="font-size: 1rem;cursor: pointer;"
                     v-tooltip.bottom="t('listValutazioni.building')" @click="buildingEvaluation"></i>
             </template>
             <template #content_content="{ item }">
@@ -384,6 +404,25 @@ const getColorScore = (score) => {
 
 </template>
 <style>
+.d-ask {
+    display: flex;
+    flex-direction: row;
+    gap: 2;
+    justify-content: space-between;
+}
+
+.d-ask>div {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.d-ask:first-child {
+    border-right: 2px solid #99A1AF;
+}
+
 .fieldset {
     border: 1px solid #99A1AF;
     border-radius: 5px;
