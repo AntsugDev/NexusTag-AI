@@ -39,7 +39,7 @@ class MarkDownChunk(GeneralChunck):
             )
             result = []
             global_order = 0  
-
+            strategy = self.strategy_chunk()
             if self.get_content:
                 for doc in self.docs_by_header:
                     headers = doc.metadata
@@ -63,12 +63,13 @@ class MarkDownChunk(GeneralChunck):
                                 "metadata": header_metadata_json
                             })
                         else:
+                            
                             # Inserimento nel database
                             chunk_data = {
                                 "id": self.document_id,
                                 "content": text,
                                 "order_chunk": global_order,
-                                "strategy_chunk": self.strategy_chunk(),
+                                "strategy_chunk": strategy,
                                 "token_count": self.count_tokens(text),
                                 "overlap_token": self.standard_overlap,
                                 "metadata": json.dumps({
@@ -80,9 +81,11 @@ class MarkDownChunk(GeneralChunck):
                             }
                             chunk_record = self.chunks.insert_chunk(chunk_data)
                             if chunk_record:
-                                print('insert chunk',chunk_record)
-                             #  self.embed(text, self.document_id, chunk_record["id"])
-                                result.append(chunk_record)
+                                print(f"Inserimento chunck eseguito con successo({chunk_record}), procedo con l'embedding")
+                                self.embed(text, self.document_id, chunk_record)
+                                result.append(chunk_data)
+                            else :
+                                raise Exception("Errore durante l'inserimento del chunck")    
                         
                         global_order += 1 
             else:

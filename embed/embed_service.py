@@ -20,14 +20,16 @@ class Embed:
         self.jobs_failed = JobsFailed()
         self.embed_model = EmbedModel()
 
-    async def embed(self):
+    def embed(self):
         try:
             try_i = 0
             while try_i < self.max_try:
+                print(f"Tentativo {try_i} di embedding per il chunck {self.chunk_id}")
                 try:
                     # Eseguiamo l'embedding
-                    result = await self.ollama.aembed_query(self.content)
+                    result = self.ollama.embed_query(self.content)
                     if result and len(result) > 0:
+                        print(f"Vector success for chunck {self.chunk_id}")
                         self.embed_model.insert_embed({
                             "chunk_id": self.chunk_id,
                             "embedding": result,
@@ -36,13 +38,13 @@ class Embed:
                 except Exception as e:
                     try_i += 1
                     if try_i == self.max_try:
-                        self.jobs_failed.insert_job_failed({
+                        self.jobs_failed.insert({
                             "document_id": self.document_id,
                             "row_id": self.chunk_id,
                             "meta_data": json.dumps({
                                 "content": self.content,
                                 }),
-                                "exception": str(e)
+                            "exception": str(e)
                             })
         except Exception as e:
             print(f"Errore critico in Embed service: {e}")

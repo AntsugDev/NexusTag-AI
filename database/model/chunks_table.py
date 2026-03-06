@@ -8,15 +8,11 @@ class ChunkTable(ModelGeneral):
         self.table = "chunks"
 
     def insert_chunk(self, data):
-        from database.model.strategy import StrategyChunk
-        strategy_chunk = StrategyChunk()
-        strategy_chunk_id = strategy_chunk.get_by_name(data.get("strategy_chunk"))
-
         return self.insert({
             "document_id": data.get("id"),
             "content": data.get("content"),
             "order_chunk": data.get("order_chunk"),
-            "strategy_chunk": strategy_chunk_id if strategy_chunk_id else None,
+            "strategy_chunk": data.get("strategy_chunk"),
             "token_count": data.get("token_count"),
             "overlap_token": data.get("overlap_token"),
             "metadata": data.get("metadata")

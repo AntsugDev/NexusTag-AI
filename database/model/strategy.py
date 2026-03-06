@@ -15,7 +15,11 @@ class StrategyChunk(ModelGeneral):
         return self.global_search()    
 
     def get_by_name(self,name:str):
-        return self.search({"name":name})
+        search = self.search(data={"name":name}, columns=["id"])
+        if search:
+            return dict(search[0]).get('id')
+        else:
+            raise ExceptionRequest(message=f"Strategy not found", status_code=404)    
 
     def get_by_id(self,id:int):
         return self.show(id)

@@ -53,7 +53,6 @@ class ModelGeneral():
         
         if data:
             s += f" WHERE {' AND '.join([f'{key} = ?' for key in data.keys()])}"
-      
         return self.execute(s, tuple(data.values()), fetch=True)        
     
     def paginate(self, page=1, limit=10, data=None, join_table=None, columns=None):

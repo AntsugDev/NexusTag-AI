@@ -72,12 +72,9 @@ class GeneralChunck(ABC):
         """
         pass
 
-    async def embed(self, content,document_id,chunk_id):
+    def embed(self, content,document_id,chunk_id):
        try:
-        print("content",content)
-        print("document_id",document_id)
-        print("chunk_id",chunk_id)
-        await Embed(
+        Embed(
             content=content,
             chunk_id=chunk_id,
             document_id=document_id,
@@ -88,11 +85,14 @@ class GeneralChunck(ABC):
     def strategy_chunk(self):
         s = StrategyChunk()
         match self.type_file:
-            case "txt" |"log"|"md"|"sql":
-                return s.get_by_name(str(os.getenv("STRATEGY_CHUNK_TESTUALE")))
+            case "txt" |"log"|"sql":
+                return s.get_by_name(str(os.getenv("STRATEGY_CHUNK_TESTUALE")).strip() )
+            case "md":
+                return s.get_by_name(str(os.getenv("STRATEGY_CHUNK_MD")).strip())
             case "csv"|"xls"|"xlsx":
-                return s.get_by_name(str(os.getenv("STRATEGY_CHUNK_ROW")))
+                return s.get_by_name(str(os.getenv("STRATEGY_CHUNK_ROW")).strip())
             case "pdf"|"doc"|"docx"|"docs":
-                return s.get_by_name(str(os.getenv("STRATEGY_CHUNK_DOC")))
+                return s.get_by_name(str(os.getenv("STRATEGY_CHUNK_DOC")).strip())
             case _:
-                return s._get_name(str(os.getenv("STRATEGY_CHUNK_GENERICO")))   
+                return s.get_by_name(str(os.getenv("STRATEGY_CHUNK_GENERICO")).strip())   
+       
