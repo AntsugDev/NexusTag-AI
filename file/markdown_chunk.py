@@ -41,6 +41,8 @@ class MarkDownChunk(GeneralChunck):
             global_order = 0  
             strategy = self.strategy_chunk()
             if self.get_content:
+                to_embeded = []
+                chunk_record = []
                 for doc in self.docs_by_header:
                     headers = doc.metadata
                     header_context = ""
@@ -50,43 +52,26 @@ class MarkDownChunk(GeneralChunck):
                         header_context = f"{last_header_value}\n\n"
                     
                     full_text = f"{header_context}{doc.page_content}"
-
                     splits = splitter.split_text(full_text)
-                    
+                   
                     for text in splits:
                         header_metadata_json = json.dumps(headers) if headers else None
-                        
-                        if is_testing:
-                            result.append({
-                                "order": global_order,
-                                "content": text,
-                                "metadata": header_metadata_json
+                        chunk = self.insert_chunks(text,global_order,{
+                                "chunk_order": global_order,
+                                "type": self.type_file,
+                                "char_count": len(text),
+                                "headers": headers
                             })
-                        else:
-                            
-                            # Inserimento nel database
-                            chunk_data = {
-                                "id": self.document_id,
-                                "content": text,
-                                "order_chunk": global_order,
-                                "strategy_chunk": strategy,
-                                "token_count": self.count_tokens(text),
-                                "overlap_token": self.standard_overlap,
-                                "metadata": json.dumps({
-                                    "chunk_order": global_order,
-                                    "type": self.type_file,
-                                    "char_count": len(text),
-                                    "headers": headers
-                                })
-                            }
-                            chunk_record = self.chunks.insert_chunk(chunk_data)
-                            if chunk_record:
-                                self.embed(text, self.document_id, chunk_record)
-                                result.append(chunk_data)
-                            else :
-                                raise Exception("Errore durante l'inserimento del chunck")    
-                        
+                        if chunk: 
+                            self.to_chunks_id.append(chunk)
+                            self.to_emebed.append(text)
+
                         global_order += 1 
+
+                if chunk_record:
+                  self.embed(self.document_id)
+                else :
+                  raise Exception("Errore durante l'inserimento del chunck")      
             else:
                 raise Exception("Errore durante la lettura del file")
             

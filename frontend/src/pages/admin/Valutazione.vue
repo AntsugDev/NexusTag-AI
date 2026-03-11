@@ -238,12 +238,13 @@ const buildingEvaluation = async () => {
     try {
         const response = await api.post('/api/valutazione/ask', {
             chunks: chunks.value,
-            document_id: documentId
+            document_id: parseInt(documentId)
         });
         ask.value = response.data.result
         askDialog.value = true
 
     } catch (e) {
+        console.log(e)
     }
 }
 
@@ -252,6 +253,16 @@ const getColorScore = (score) => {
     else if (parseFloat(score) >= 50 && parseFloat(score) <= 79) return 'color-score-medium'
     else return 'color-score-low'
 }
+const startChat = async (item) => {
+    try {
+        const similarity = await api.post(`/api/valutazione/ask/trying`);
+
+
+    } catch (e) {
+        console.log(e)
+    }
+}
+
 </script>
 
 <template>
@@ -271,9 +282,9 @@ const getColorScore = (score) => {
             <div class="d-ask">
                 <div v-for="item, index of ask" :key="index">
                     <BlockUI>
-                        <Panel :header="'ask '+ (index+1)">
+                        <Panel :header="'ask ' + (index + 1)">
                             <p>{{ item }}</p>
-                            <Button :label="t('common.simula')" icon="pi pi-check" @click=""></Button>
+                            <Button :label="t('common.simula')" icon="pi pi-check" @click="startChat(item)"></Button>
                         </Panel>
                     </BlockUI>
                 </div>
@@ -314,7 +325,7 @@ const getColorScore = (score) => {
             <div class="stat-mini" v-if="isReadonly">
                 <span class="label">{{ t('listValutazioni.score') }}</span>
                 <span :class="'value ' + getColorScore(evaluationsData.score)">{{ evaluationsData.score.toFixed(2)
-                }}</span>
+                    }}</span>
             </div>
         </div>
         <TableComponent @refresh="loadEvaluationData" :setAllRow="true" :items="chunks" :columns="[

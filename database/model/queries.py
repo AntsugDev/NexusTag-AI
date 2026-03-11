@@ -10,24 +10,27 @@ class Queries(ModelGeneral):
          self.table = "queries"
          self.d = Documents()
 
-    def convert_content(self,content):
+    def convert_content(self,content,query_id,document_id):
         try:
-          eb = Embed(content, None, None)
+          eb = Embed(content=content, query_id=query_id,document_id=document_id)
           return eb.embed(True)
         except Exception as e:
             raise e         
     
     def set_query(self,data):
         try: 
-            document = self.d.select_document(data.get("document_id"))
-            topic_id = document.get('topic')
     
-            return self.insert(data={
-                    "user_id": data.get("user_id"),
+            insert =  self.insert(data={
                     "query" :data.get("query"),
-                    "topic":topic_id,
-                    "embedding": self.convert_content(data.get( "query")),
+                    "document_id":data.get("document_id"),
                     "is_evaluation":data.get("is_evaluation")
                     });
+            if insert:
+              from database.model.emebed_model import EmbedModel
+              e = EmbedModel()
+              e.insert_embed({
+                "query_id": insert,
+                "embedding": self.convert_content(content=data.get("query"),document_id=data.get("document_id"),query_id=insert),
+              })     
         except Exception as e:
           raise e 

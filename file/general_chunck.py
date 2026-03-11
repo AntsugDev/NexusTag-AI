@@ -8,7 +8,8 @@ from database.model.jobs_failed import JobsFailed
 from dotenv import load_dotenv
 from database.model.emebed_model import EmbedModel
 from database.model.strategy import StrategyChunk
-
+from database.model.chunks_table import ChunkTable
+import json
 load_dotenv()
 
 class GeneralChunck(ABC):
@@ -31,10 +32,12 @@ class GeneralChunck(ABC):
         self.chunck_size_max = int(os.getenv("K_BINARY_MAX_CHUNK", 5))
         
         self.task_resolved = 0
-        self.ollama_model = os.getenv("OLLAMA_MODEL", "llama3")
-        self.ollama = OllamaEmbeddings(
-             model=self.ollama_model,
-        )
+       
+        self.to_emebed    = []
+        self.to_chunks_id = []
+        self.to_queries_id = []
+
+        self.chunkTable = ChunkTable()
         
         # Inizializzazione tokenizer
         try:
@@ -71,12 +74,23 @@ class GeneralChunck(ABC):
         ]
         """
         pass
+    def insert_chunks(self,text,i,metadata):    
+        return self.chunkTable.insert_chunk({
+                        "id": self.document_id,
+                        "content": text,
+                        "order_chunk": i,
+                        "strategy_chunk": self.strategy_chunk(),
+                        "token_count": self.count_tokens(text),
+                        "overlap_token": self.standard_overlap,
+                        "metadata": json.dumps(metadata)
+                        })
 
-    def embed(self, content,document_id,chunk_id):
+    def embed(self,document_id):
        try:
         Embed(
-            content=content,
-            chunk_id=chunk_id,
+            content=self.to_embed,
+            chunk_id=self.to_chunks_id,
+            query_id=self.to_queries_id,
             document_id=document_id,
         ).embed()
        except Exception as e:

@@ -71,62 +71,59 @@ CREATE TABLE chunks (
 DROP  TABLE IF EXISTS queries;
 CREATE TABLE queries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
+    document_id INTEGER NOT NULL,
     query TEXT NOT NULL,
-    topic INTEGER NULL,
-    embedding BLOB NOT NULL,
     is_evaluation INTEGER DEFAULT (0),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (topic) REFERENCES t_topic(id) ON DELETE CASCADE,
+    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
 );
 
-DROP  TABLE IF EXISTS results;
-CREATE TABLE results (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    query_id INTEGER NOT NULL,
-    answer TEXT NOT NULL,
-    context TEXT NOT NULL,
-    score REAL NOT NULL,
-    model TEXT NOT NULL,
-    user_feedback INTEGER DEFAULT NULL, -- NULL: no feedback, 1: OK, 0: KO
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (query_id) REFERENCES queries(id) ON DELETE CASCADE
-);
+-- -- DROP  TABLE IF EXISTS results;
+-- -- CREATE TABLE results (
+-- --     id INTEGER PRIMARY KEY AUTOINCREMENT,
+-- --     query_id INTEGER NOT NULL,
+-- --     answer TEXT NOT NULL,
+-- --     context TEXT NOT NULL,
+-- --     score REAL NOT NULL,
+-- --     model TEXT NOT NULL,
+-- --     user_feedback INTEGER DEFAULT NULL, -- NULL: no feedback, 1: OK, 0: KO
+-- --     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+-- --     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+-- --     FOREIGN KEY (query_id) REFERENCES queries(id) ON DELETE CASCADE
+-- -- );
 
-/*
- Serve per:
-capire perché il modello ha risposto così
-analisi errori
-Pareto / score multi‑obiettivo
-*/
-DROP  TABLE IF EXISTS chunk_usage;
-CREATE TABLE chunk_usage (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    query_id INTEGER,
-    chunk_id INTEGER,
-    similarity REAL,
-    rank INTEGER,
-    FOREIGN KEY (query_id) REFERENCES queries(id) ON DELETE CASCADE,
-    FOREIGN KEY (chunk_id) REFERENCES chunks(id) ON DELETE CASCADE
-);
+-- /*
+--  Serve per:
+-- capire perché il modello ha risposto così
+-- analisi errori
+-- Pareto / score multi‑obiettivo
+-- */
+-- DROP  TABLE IF EXISTS chunk_usage;
+-- CREATE TABLE chunk_usage (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     query_id INTEGER,
+--     chunk_id INTEGER,
+--     similarity REAL,
+--     rank INTEGER,
+--     FOREIGN KEY (query_id) REFERENCES queries(id) ON DELETE CASCADE,
+--     FOREIGN KEY (chunk_id) REFERENCES chunks(id) ON DELETE CASCADE
+-- );
 
-DROP  TABLE IF EXISTS rag_runs;
-CREATE TABLE rag_runs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    query_id INTEGER,
-    embedding_model TEXT,
-    llm_model TEXT,
-    chunk_strategy TEXT,
-    retrieval_k INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (query_id) REFERENCES queries(id) ON DELETE CASCADE
-);
+-- DROP  TABLE IF EXISTS rag_runs;
+-- CREATE TABLE rag_runs (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     query_id INTEGER,
+--     embedding_model TEXT,
+--     llm_model TEXT,
+--     chunk_strategy TEXT,
+--     retrieval_k INTEGER,
+--     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+--     FOREIGN KEY (query_id) REFERENCES queries(id) ON DELETE CASCADE
+-- );
 
 DROP TABLE IF EXISTS JOBS_FAILED;
-CREATE TABLE JOBS_FAILED (
+CREATE TABLE jobs_failed (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     document_id INTEGER NOT NULL,
     row_id INTEGER NOT NULL,
@@ -160,7 +157,8 @@ CREATE TABLE evaluations (
 -- embedding float[4096] definisce un vettore di 4096 numeri a virgola mobile
 DROP TABLE IF EXISTS vss_chunks;
 CREATE VIRTUAL TABLE vss_chunks USING vec0(
-    chunk_id INTEGER PRIMARY KEY,
+    chunk_id INTEGER KEY NULL,
+    query_id INTEGER KEY NULL,
     embedding float[4096] distance_metric=cosine
 ); 
 

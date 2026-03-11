@@ -11,7 +11,7 @@ from server.auth import verify_token
 import shutil
 from dotenv import load_dotenv
 from form_request.evalutations_request import EvaluationsRequest
-from form_request.ask_request import AskRequest
+from form_request.ask_request import AskRequest,AskTryning
 # import nltk
 # from nltk.tokenize import sent_tokenize
 import re
@@ -127,7 +127,7 @@ def valutazione_controller(valutazione_router: APIRouter):
         try:
             content = ""
             for chunk in chunks:
-                content += chunk.get("content")
+                content += str(chunk.get("content"))
             sentences = re.split(r'[.!?]\s+', content)
             sample_5 = random.sample(sentences, k=min(2, len(sentences)))
             return sample_5
@@ -137,28 +137,42 @@ def valutazione_controller(valutazione_router: APIRouter):
             raise e
 
     @valutazione_router.post("/ask",tags=["valutations"], description="Extract asks for testing embeding")
-    def extract_ask(chunks: AskRequest, user: dict = Depends(verify_token)):
+    def extract_ask(data: AskRequest, user: dict = Depends(verify_token)):
         try:
             if user.get("username") != "admin":
                 raise HTTPException(status_code=403, detail="Forbidden: Admin only")
-            ask = generate_ask(chunks)
+            d = dict(data)
+            ask = generate_ask(d.get("chunks"))
             from database.model.queries import Queries
             q = Queries()
-            response = []
+            response =[]
             for a in ask:
                 insert = q.set_query({
                           "user_id": user.get('id'),
-                          "queries": a,
-                          "topic_id": "",
-                          "is_evaluation": 1
+                          "query": a,
+                          "is_evaluation": 1,
+                          "document_id":d.get("document_id")
                 })
                 if insert:
-                    response.append(ask)    
+                    response.append({
+                        'id': insert, 'ask': a
+                    })    
             return response(msg="Asking", data=response)
             
         except Exception as e:
             raise ExceptionRequest(message=str(e), status_code=422)
-
+    
+    @valutazione_router.post("/ask/tryning",tags=["valutations"], description="Testing the ask for content")
+    def ask_tryning(data: AskTryning, user: dict = Depends(verify_token)):
+        try:
+           if user.get("username") != "admin":
+                raise HTTPException(status_code=403, detail="Forbidden: Admin only")
+           from database.model.embed_model import EmbedModel
+           e = EmbedModel()
+           r = e.similarity(query_id=data.id_query)     
+           return response(msg="Similarity", data=r)
+        except Exception as e:
+            raise ExceptionRequest(message=str(e), status_code=422)    
 
     @valutazione_router.get("/{document_id}",tags=["valutations"], description="Get valutation for document")
     def valutazione(document_id: int,user: dict = Depends(verify_token)):
