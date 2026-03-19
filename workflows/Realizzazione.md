@@ -1,3 +1,0 @@
-# Realizzazione
-
-Contenuto del file da copiare...

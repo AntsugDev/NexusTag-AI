@@ -1,0 +1,4 @@
+envorement/*
+.env
+.env.prod
+.env.test
