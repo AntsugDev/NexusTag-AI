@@ -3,12 +3,13 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from database.conn_sqlite import ConnectionSqlite
 from datetime import datetime
+import math
 
 class Models:
     def __init__(self):
         self.table= None
-        self.default_order_by = None
-        self.default_sort = "ASC"
+        self.default_order_by = 'created_at'
+        self.default_sort = "DESC"
         self.columns = []
         self.join = []
         self.conn = ConnectionSqlite()
@@ -16,6 +17,14 @@ class Models:
           row_factory_needed = fetch or one
           cursor = self._conn.getCursor(row_factory=row_factory_needed)
         """
+
+    def all(self, fetch):
+        try:
+            if fetch is None:
+                return None
+            return [dict(item) for item in fetch]
+        except Exception as e:
+            raise e      
 
     def __join(self):
         """
@@ -37,37 +46,50 @@ class Models:
             - operator: operatore da usare (=,like,in,not in, ecc.)
             - value: valore da cercare
             - type: tipo di where (AND, OR)
+            - typeof: tipo di valore (string, number)
         """
         where_str = ""
         if where:
-            for where in where:
-                where_str += f"{where['type']} {where['column']} {where['operator']} {where['value']}"
+            for k,w in enumerate(where):
+                v = f"'{w['value']}'" if isinstance(w['value'],str) else w['value']
+                where_str += f"{ 'WHERE' if k == 0 else w['type']} {w['column']} {w['operator']} {v}"
 
             if where_str == "":
-                where_str = f" DELETED_AT IS NULL"    
+                where_str = f" WHERE ({self.table}.deleted_at = '' OR {self.table}.deleted_at IS NULL)"    
             else:
-                where_str = f" {where_str} AND DELETED_AT IS NULL"    
+                where_str = f" {where_str} AND ({self.table}.deleted_at = '' OR {self.table}.deleted_at IS NULL)"    
+        else:         
+            where_str = f" WHERE ({self.table}.deleted_at = '' OR {self.table}.deleted_at IS NULL)"   
         return where_str    
 
     def __columns(self):
         """
             è un array di stringhe che rappresenta le colonne da selezionare
         """
-        columns_str = "*"
+        columns_str = ""
         if self.columns:
             for column in self.columns:
-                columns_str += f"{column},"
-            columns_str += "created_at,updated_at"    
+                c = column if column != 'id' else f"{self.table}.id"
+                columns_str += f"{c},"
+            columns_str += f"strftime('%Y-%m-%d %H:%M:%S',{self.table}.created_at) as created_at,strftime('%Y-%m-%d %H:%M:%S',{self.table}.updated_at) as updated_at"
+        else:
+            columns_str = f"{self.table}.*"  
+        
+
         return columns_str
 
-    def paginate(self,where:[dict]=None, page=1, per_page=10, order_by=self.default_order_by, sort=self.default_sort):
+    def paginate(self,where:[dict]=None, page=1, per_page=10, orderBy:str=None, sort:str=None):
         try:
+            order_by = orderBy if orderBy else self.default_order_by
+            sort = sort if sort else self.default_sort
             cursor = self.conn.getCursor(True)
             join_str = self.__join()
             where_str = self.__where(where)
             columns_str = self.__columns()
             cursor.execute(f'SELECT {columns_str} FROM {self.table} {join_str} {where_str} ORDER BY {order_by} {sort} LIMIT {per_page} OFFSET {(page-1)*per_page}')
-            return cursor.fetchall()
+            response = self.all(cursor.fetchall())
+            total_page = math.ceil(len(response)/per_page)
+            return {"data":response, "page":page, "per_page":per_page, "total_element":len(response), "total_page":total_page, "order_by":order_by, "sort":sort}
         except Exception as e:
             raise e        
     
@@ -79,7 +101,7 @@ class Models:
             where_str = self.__where(where)
             columns_str = self.__columns()
             cursor.execute(f'SELECT {columns_str} FROM {self.table} {join_str} {where_str}')
-            return cursor.fetchall()
+            return self.all(cursor.fetchall())
         except Exception as e:
             raise e
 
@@ -89,7 +111,7 @@ class Models:
             join_str = self.__join()
             columns_str = self.__columns()
             cursor.execute(f'SELECT {columns_str} FROM {self.table} {join_str} WHERE id = {id}')
-            return cursor.fetchone()
+            return dict(cursor.fetchone()) if cursor.fetchone() else None
         except Exception as e:
             raise e
 
@@ -100,7 +122,7 @@ class Models:
             where_str = self.__where(where)
             columns_str = self.__columns()
             cursor.execute(f'SELECT {columns_str} FROM {self.table} {join_str} {where_str}')
-            return cursor.fetchone()
+            return self.all(cursor.fetchall())
         except Exception as e:
             raise e
     def insert(self, data:dict):
@@ -111,12 +133,12 @@ class Models:
             values += f",'{datetime.now()}'"
             cursor = self.conn.getCursor()
             cursor.execute(f'INSERT INTO {self.table} ({keys}) VALUES ({values})')
-            self.conn.commit()
+            cursor.connection.commit()
             return cursor.lastrowid
         except Exception as e:
             raise e
 
-    def updateById(self, id:int, data:[dict]):
+    def updateById(self, id:int, data:dict):
         try:
             """
             data = [
@@ -124,12 +146,13 @@ class Models:
                 {'column': 'email', 'value': 'john.doe@example.com', 'operator': '=', 'type': 'OR'}
             ]
             """
-            set_str = ",".join([f"{item['column']} = '{item['value']}'" for item in data])
-            set_str += ",updated_at = '{datetime.now()}'"
+            set_str = ",".join([f"{key} = '{item}'" for (key,item) in data.items()])
+            set_str += f",updated_at = '{datetime.now()}'"
+
 
             cursor = self.conn.getCursor()
             cursor.execute(f'UPDATE {self.table} SET {set_str} WHERE id = {id}')
-            self.conn.commit()
+            cursor.connection.commit()
             return cursor.rowcount
         except Exception as e:
             raise e
@@ -148,7 +171,7 @@ class Models:
 
             cursor = self.conn.getCursor()
             cursor.execute(f'UPDATE {self.table} SET {set_str} {where_str}')
-            self.conn.commit()
+            cursor.connection.commit()
             return cursor.rowcount
         except Exception as e:
             raise e 
@@ -156,8 +179,8 @@ class Models:
     def deleteById(self, id:int):
         try:
             cursor = self.conn.getCursor()
-            cursor.execute(f'UPDATE {self.table} SET deleted_at = {datetime.now()} WHERE id = {id}')
-            self.conn.commit()
+            cursor.execute(f"UPDATE {self.table} SET deleted_at = '{datetime.now()}' WHERE id = {id}")
+            cursor.connection.commit()
             return cursor.rowcount
         except Exception as e:
             raise e
@@ -172,12 +195,21 @@ class Models:
         except Exception as e:
             raise e 
 
+    def deleteAll(self):
+        try:
+            cursor = self.conn.getCursor()
+            cursor.execute(f"UPDATE {self.table} SET deleted_at = '{datetime.now()}'")
+            cursor.connection.commit()
+            return True
+        except Exception as e:
+            raise e        
+
     def statment(self, query:str):
         try:
             cursor = self.conn.getCursor(True)
             cursor.execute(query)
             self.conn.commit()
-            return cursor.fetchall()
+            return self.all(cursor.fetchall())  
         except Exception as e:
             raise e                              
 

@@ -6,7 +6,7 @@ from datetime import datetime
 class ConnectionSqlite:
     def __init__(self):
         self.database = os.path.join(os.path.dirname(__file__), 'nexus-tag-ai.sqlite')
-        self.conn = sqlite3.connect(self.database)
+        self.conn = sqlite3.connect(self.database,check_same_thread=False)
         self.conn.enable_load_extension(True)
         sqlite_vec.load(self.conn)
         self.cursor = None
