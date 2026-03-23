@@ -64,7 +64,6 @@ CREATE TABLE CHUNKS(
     strategy_chunk_id INTEGER NULL,
     token_count INTEGER  NULL,
     overlap_token INTEGER  NULL,
-    metadata JSON NULL, 
     is_convert_embeded BOOLEAN DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NULL,
