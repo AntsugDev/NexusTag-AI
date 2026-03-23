@@ -5,8 +5,8 @@ from chunks.general_chunck import GeneralChunk
 from langchain_text_splitters import  RecursiveCharacterTextSplitter
 
 class Recursive(GeneralChunk):
-    def __init__(self,document_id:int, standard_token:int = None):
-        super().__init__(document_id,standard_token)
+    def __init__(self,document:dict, standard_token:int = None):
+        super().__init__(document,standard_token)
         separator =["\n", "\r\n"]
 
         self.splitter = RecursiveCharacterTextSplitter(

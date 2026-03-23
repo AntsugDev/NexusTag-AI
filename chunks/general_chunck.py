@@ -5,14 +5,13 @@ from models.documents import Documents
 from abc import ABC, abstractmethod
 from dotenv import load_dotenv
 from models.chunks import Chunks
-from models.strategy_chunks import StrategyChunks
+from models.strategy_chunk import StrategyChunk
 load_dotenv()
 import tiktoken
 
 class GeneralChunk(ABC):
-    def __init__(self,document_id:int,token:int):
-        self.document_id = document_id
-        self.document = Documents().find(document_id)
+    def __init__(self,document:dict,token:int):
+        self.document = document
         self.content = None
         if self.document:
            with open(os.path.join(os.getcwd(), 'import-data',self.document.get('name_file')), 'r',encoding='utf-8') as f:
@@ -20,9 +19,9 @@ class GeneralChunk(ABC):
         else:
             raise ValueError(f"Document not found: {document_id}")
         self.token = os.getenv("MIN_TOKEN",token)    
-        self.overlap = self.token * 0.1 
+        self.overlap = float(self.token) * 0.1 
         self.chunks = Chunks()
-        self.strategy_chunks = StrategyChunks()
+        self.strategy_chunks = StrategyChunk()
 
     def get_strategy_chunk(self, strategy:str):
         response = self.strategy_chunks.findBy({

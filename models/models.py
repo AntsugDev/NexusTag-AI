@@ -110,8 +110,8 @@ class Models:
             cursor = self.conn.getCursor(True)
             join_str = self.__join()
             columns_str = self.__columns()
-            cursor.execute(f'SELECT {columns_str} FROM {self.table} {join_str} WHERE id = {id}')
-            return dict(cursor.fetchone()) if cursor.fetchone() else None
+            cursor.execute(f'SELECT {columns_str} FROM {self.table} {join_str} WHERE {self.table}.id = {id}')
+            return self.all(cursor.fetchall())
         except Exception as e:
             raise e
 
