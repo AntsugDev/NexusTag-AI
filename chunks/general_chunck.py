@@ -19,14 +19,12 @@ class GeneralChunk(ABC):
         else:
             raise ValueError(f"Document not found: {document_id}")
         self.token = os.getenv("MIN_TOKEN",token)    
-        self.overlap = float(self.token) * 0.1 
+        self.overlap = int(float(self.token) * 0.1)
         self.chunks = Chunks()
         self.strategy_chunks = StrategyChunk()
 
     def get_strategy_chunk(self, strategy:str):
-        response = self.strategy_chunks.findBy({
-            "label": strategy
-        })    
+        response = self.strategy_chunks.findBy(where=[{"column":"label","operator":"=","value":strategy,"type":"WHERE"}])    
         if response:
             return response[0].get('id')
         else:

@@ -3,6 +3,9 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from chunks.select_chunk import SelectChunk
 try:
+    print("-"*60)
+    print("test_chunks_txt")
+    print("-"*60)
     SelectChunk(2)
     print("ok")
 except Exception as e:
