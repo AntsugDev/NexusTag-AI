@@ -19,7 +19,7 @@ class GeneralChunk(ABC):
         try:
             self.content = loader[0].page_content
         except Exception as e:
-            self.content = loader.page_content
+            self.content = loader
         self.token = os.getenv("MIN_TOKEN",token)  
         self.tag = tag  
         self.overlap = int(float(self.token) * 0.1)
@@ -59,6 +59,8 @@ class GeneralChunk(ABC):
             if not os.path.exists(path_database):
                 raise ValueError("Path database not found")
 
+            print(chunks)
+            exit()
             docs = [
                 Document(
                     page_content=c,
