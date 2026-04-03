@@ -18,7 +18,7 @@ class RecursiveSql(GeneralChunk):
 
     def chunk(self):
         try: 
-            split = self.splitter.split_documents(self.content) 
+            split = self.splitter.split_text(self.content) 
             self.save_chunk(split)
         except Exception as e:
             raise e
