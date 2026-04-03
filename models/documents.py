@@ -37,4 +37,17 @@ class Documents(Models):
            })
 
         except Exception as e:
+            raise e
+
+    def update_status(self,document_id:int,status_id:str):
+        try:
+           from models.status_file import StatusFile
+           s = StatusFile()
+           find = s.findBy([{"column": "label", "operator": "=", "value": status_id, "type": "AND"}])
+           if find:
+              data = find[0]["id"]
+           else:
+              raise Exception("Status file not found")
+           return self.updateById(document_id,{"status_id":data})
+        except Exception as e:
             raise e    

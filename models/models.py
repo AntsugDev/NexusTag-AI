@@ -140,7 +140,7 @@ class Models:
 
     def updateById(self, id:int, data:dict):
         try:
-            """
+            """ 
             data = [
                 {'column': 'name', 'value': 'John Doe', 'operator': '=', 'type': 'AND'},
                 {'column': 'email', 'value': 'john.doe@example.com', 'operator': '=', 'type': 'OR'}
@@ -208,7 +208,7 @@ class Models:
         try:
             cursor = self.conn.getCursor(True)
             cursor.execute(query)
-            self.conn.commit()
+            cursor.connection.commit()
             return self.all(cursor.fetchall())  
         except Exception as e:
             raise e                              

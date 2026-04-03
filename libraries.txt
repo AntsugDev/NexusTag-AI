@@ -36,3 +36,6 @@ nltk
 fastembed
 
 tiktoken
+langchain_unstructured
+libmagic
+python-magic-bin

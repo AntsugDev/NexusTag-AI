@@ -4,6 +4,6 @@ envorement/*
 .env.test
 __pycache__/*
 __pycache__
-database/nexus-tag-ai.sqlite
+*.sqlite
 .idea
 import-data/*

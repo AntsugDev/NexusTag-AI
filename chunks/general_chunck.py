@@ -8,20 +8,24 @@ from models.chunks import Chunks
 from models.strategy_chunk import StrategyChunk
 load_dotenv()
 import tiktoken
+from langchain_ollama import OllamaEmbeddings
+from datetime import datetime
+from langchain_core.documents import Document
+from langchain_community.vectorstores import SQLiteVec
 
 class GeneralChunk(ABC):
-    def __init__(self,document:dict,token:int):
+    def __init__(self,document:dict,loader,tag:str,token:int = None):
         self.document = document
-        self.content = None
-        if self.document:
-           with open(os.path.join(os.getcwd(), 'import-data',self.document.get('name_file')), 'r',encoding='utf-8') as f:
-               self.content = f.read()
-        else:
-            raise ValueError(f"Document not found: {document_id}")
-        self.token = os.getenv("MIN_TOKEN",token)    
+        try:
+            self.content = loader[0].page_content
+        except Exception as e:
+            self.content = loader.page_content
+        self.token = os.getenv("MIN_TOKEN",token)  
+        self.tag = tag  
         self.overlap = int(float(self.token) * 0.1)
         self.chunks = Chunks()
         self.strategy_chunks = StrategyChunk()
+        self.embeddings = OllamaEmbeddings(model="nomic-embed-text")
 
     def get_strategy_chunk(self, strategy:str):
         response = self.strategy_chunks.findBy(where=[{"column":"label","operator":"=","value":strategy,"type":"WHERE"}])    
@@ -29,6 +33,7 @@ class GeneralChunk(ABC):
             return response[0].get('id')
         else:
             raise ValueError(f"Strategy chunk not found: {strategy}")
+
     
     def count_token(self,text:str):
         encoding = None
@@ -39,7 +44,45 @@ class GeneralChunk(ABC):
         if encoding:
             return len(encoding.encode(text))
         else:
-            raise ValueError("Error counting token")   
+            raise ValueError("Error counting token")  
+    
+    def save_chunk(self,chunks:[]):
+        from models.embeddings import Embeddings
+        from models.documents import Documents
+        d = Documents()
+        e = Embeddings()
+        e.statment(f"DELETE FROM embeddings WHERE json_extract(metadata, '$.document_id') = {self.document.get('document_id')}")
+
+        try:
+
+            path_database = os.path.join('database','nexus-tag-ai.sqlite')
+            if not os.path.exists(path_database):
+                raise ValueError("Path database not found")
+
+            docs = [
+                Document(
+                    page_content=c,
+                    metadata={"tag": self.tag, "date_created": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "document_id": self.document.get('document_id')}
+                ) for c in chunks
+            ]
+            vectorstore = SQLiteVec.from_documents(
+                documents=docs,
+                embedding=self.embeddings,
+                db_file=path_database,
+                table="embeddings"
+            )
+            if vectorstore:
+                d.update_status(self.document.get('document_id'),"completed")
+                path_file = os.path.join(os.getcwd(), 'import-data',self.document.get('name_file'))
+                if os.path.exists(path_file):
+                    os.remove(path_file)
+                print(f"end: {datetime.now()}")
+            else :
+                raise ValueError("Vectorstore not found")
+                d.update_status(self.document.get('document_id'),"failed")    
+        except Exception as e:
+            d.update_status(self.document.get('document_id'),"failed")
+            raise e
 
     @abstractmethod
     def chunk(self):

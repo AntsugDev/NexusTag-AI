@@ -57,7 +57,8 @@ class ConnectionSqlite:
                 {'label': 'pending', 'created_at': datetime.now()},
                 {'label': 'processing', 'created_at': datetime.now()},
                 {'label': 'completed', 'created_at': datetime.now()},
-                {'label': 'failed', 'created_at': datetime.now()}
+                {'label': 'failed', 'created_at': datetime.now()},
+                {'label': 'uploaded', 'created_at': datetime.now()}
             ]
             self.cursor = self.getCursor()
             for status_file in status_files:
