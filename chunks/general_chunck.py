@@ -59,8 +59,6 @@ class GeneralChunk(ABC):
             if not os.path.exists(path_database):
                 raise ValueError("Path database not found")
 
-            print(chunks)
-            exit()
             docs = [
                 Document(
                     page_content=c,

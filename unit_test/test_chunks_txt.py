@@ -8,6 +8,6 @@ try:
     print("-"*60)
     print("test_chunks_sql")
     print("-"*60)
-    SelectChunk(3)
+    SelectChunk(4)
 except Exception as e:
     raise e
