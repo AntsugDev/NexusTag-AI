@@ -3,7 +3,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from chunks.recursive import Recursive
 from chunks.recursive_sql import RecursiveSql
-from chunks.markdownn import Markdown
+from chunks.markdown import Markdown
 from models.documents import Documents
 from langchain_unstructured import UnstructuredLoader
 from models.tags import Tags
