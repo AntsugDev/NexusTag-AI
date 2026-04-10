@@ -6,7 +6,7 @@ from datetime import datetime
 try:
     print(f"start: {datetime.now()}")
     print("-"*60)
-    print("test_chunks_sql")
+    print("test_chunks_markdown")
     print("-"*60)
     SelectChunk(4)
 except Exception as e:

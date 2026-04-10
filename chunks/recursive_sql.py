@@ -22,3 +22,6 @@ class RecursiveSql(GeneralChunk):
             self.save_chunk(split)
         except Exception as e:
             raise e
+    
+    def set_save_chunk(self,chunks):
+        pass

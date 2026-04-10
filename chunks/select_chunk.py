@@ -6,6 +6,7 @@ from chunks.recursive_sql import RecursiveSql
 from chunks.markdown import Markdown
 from models.documents import Documents
 from langchain_unstructured import UnstructuredLoader
+from langchain_community.document_loaders import TextLoader
 from models.tags import Tags
 
 class SelectChunk:
@@ -17,7 +18,11 @@ class SelectChunk:
         path = os.path.join(os.getcwd(), 'import-data',self.document.get('name_file'))
         if not os.path.exists(path):
             raise ValueError(f"File not found: {path}")
-        loader = UnstructuredLoader(file_path=path)
+        nome_base, estensione = os.path.splitext(self.document.get('name_file'))
+        if estensione == '.md':
+            loader = TextLoader(path, encoding="utf-8")
+        else:     
+            loader = UnstructuredLoader(file_path=path)
         docs = loader.load()
         
         mime_type = self.document.get('mime_type')
@@ -25,11 +30,10 @@ class SelectChunk:
         if not tag:
             raise ValueError(f"Tag not found: {self.document.get('tag_id')}")
         tag = tag[0].get('label')
-        print(self.document.get('mime_type'))
-        exit()
+       
         match self.document.get('mime_type'):
             case "text/plain" | "application/octet-stream" | "application/sql":
-                nome_base, estensione = os.path.splitext(self.document.get('name_file'))
+                
                 if estensione == ".sql":
                     RecursiveSql(self.document,docs,tag).chunk()
                 elif estensione == '.md':  
